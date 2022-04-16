@@ -17,6 +17,10 @@ dependencies:
 
   cupertino_icons: ^1.0.2
   sliding_up_panel: ^2.0.0+1
+  adhan: ^1.1.16
+  intl: ^0.17.0
+  geolocator: ^8.2.0
+  geocoding: ^2.0.4
 
 dev_dependencies:
   flutter_test:
