@@ -59,7 +59,7 @@ class _PanelWidgetState extends State<PanelWidget> {
               children: [
                 //
                 prayerTime(
-                    true, 'Fajr', DateFormat.jm().format(prayerTimes.fajr)),
+                    false, 'Fajr', DateFormat.jm().format(prayerTimes.fajr)),
                 verticalBox(2),
                 const Divider(
                   color: Colors.white,
