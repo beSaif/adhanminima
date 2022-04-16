@@ -1,0 +1,40 @@
+name: adhanminima
+description: A new Flutter project.
+
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.16.2 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.2
+  sliding_up_panel: ^2.0.0+1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^1.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/bg.jpg
+
+  fonts:
+     - family: Halenoir
+       fonts:
+         - asset: assets/font/Halenoir-Bold.otf
+         - asset: assets/font/Halenoir-ThinObl.otf
+         - asset: assets/font/Halenoir-UltraLight.otf
+         - asset: assets/font/HalenoirText-Regular.otf
+           style: italic
