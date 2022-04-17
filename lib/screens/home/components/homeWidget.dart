@@ -1,4 +1,4 @@
-// ignore_for_file: file_names
+// ignore_for_file: file_names, import_of_legacy_library_into_null_safe, must_be_immutable
 import 'dart:async';
 
 import 'package:adhan/adhan.dart';
@@ -7,7 +7,6 @@ import 'package:adhanminima/utils/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:intl/intl.dart';
 
 class HomeWidget extends StatefulWidget {
   AsyncSnapshot<Position> position;
@@ -22,7 +21,6 @@ class _HomeWidgetState extends State<HomeWidget> {
   var lat = 0.0;
   var long = 0.0;
   PrayerTimes? prayerTimes;
-  late Timer _timer;
 
   Future<Placemark> convertLoc() async {
     List<Placemark> placemarks = await placemarkFromCoordinates(lat, long);
@@ -40,14 +38,12 @@ class _HomeWidgetState extends State<HomeWidget> {
   }
 
   void timeLeft(prayerTimes) async {
-    _timer = Timer.periodic(Duration(seconds: 1), ((timer) {
+    Timer.periodic(const Duration(seconds: 1), ((timer) {
       setState(() {
         DateTime current = DateTime.now();
         DateTime next = prayerTimes.timeForPrayer(prayerTimes.nextPrayer());
         Duration diff = current.difference(next).abs();
         //print("currentTime: $current next: $next diff: $diff");
-        format(Duration diff) =>
-            diff.toString().split('.').first.padLeft(8, "0");
         formattedDiff = diff.toString().substring(0, 7);
         //print(formattedDiff);
       });
@@ -61,6 +57,7 @@ class _HomeWidgetState extends State<HomeWidget> {
       long = widget.position.data!.longitude;
       getCords();
       timeLeft(prayerTimes);
+      convertLoc();
     });
 
     return Column(
@@ -69,14 +66,9 @@ class _HomeWidgetState extends State<HomeWidget> {
         verticalBox(0),
         Column(
           children: [
-            GestureDetector(
-              onTap: () {
-                timeLeft(prayerTimes);
-              },
-              child: Text(
-                formattedDiff,
-                style: cusTextStyle(55, FontWeight.w500),
-              ),
+            Text(
+              formattedDiff,
+              style: cusTextStyle(55, FontWeight.w500),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -103,8 +95,9 @@ class _HomeWidgetState extends State<HomeWidget> {
             FutureBuilder(
                 future: convertLoc(),
                 builder: (context, AsyncSnapshot<Placemark> location) {
+                  //print("Location: $location");
                   if (!location.hasData) {
-                    return CircularProgressIndicator();
+                    return const CircularProgressIndicator();
                   }
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.center,

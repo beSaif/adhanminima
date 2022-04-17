@@ -15,18 +15,25 @@ dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: ^1.0.2
+  cupertino_icons: ^1.0.4
   sliding_up_panel: ^2.0.0+1
-  adhan: ^1.1.16
+  adhan: ^2.0.0-nullsafety.2
   intl: ^0.17.0
   geolocator: ^8.2.0
   geocoding: ^2.0.4
+  flutter_launcher_icons: ^0.9.2
+  rename: ^2.0.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  flutter_lints: ^1.0.0
+  flutter_lints: ^1.0.4
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"
 
 flutter:
   uses-material-design: true
