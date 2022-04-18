@@ -21,6 +21,7 @@ class _HomeWidgetState extends State<HomeWidget> {
   var lat = 0.0;
   var long = 0.0;
   PrayerTimes? prayerTimes;
+  Coordinates myCoordinates = Coordinates(0, 0);
 
   Future<Placemark> convertLoc() async {
     List<Placemark> placemarks = await placemarkFromCoordinates(lat, long);
@@ -30,21 +31,30 @@ class _HomeWidgetState extends State<HomeWidget> {
   }
 
   getCords() async {
-    final myCoordinates =
+    myCoordinates =
         Coordinates(lat, long); // Replace with your own location lat, lng.
     final params = CalculationMethod.karachi.getParameters();
     params.madhab = Madhab.shafi;
     prayerTimes = PrayerTimes.today(myCoordinates, params);
+    if (prayerTimes!.nextPrayer().name == "none") {
+      final now = DateTime.now();
+      final tomorrow =
+          DateComponents.from(DateTime(now.year, now.month, now.day + 1));
+      //print(tomorrow);
+      prayerTimes = PrayerTimes(myCoordinates, tomorrow, params);
+    }
   }
 
   void timeLeft(prayerTimes) async {
     Timer.periodic(const Duration(seconds: 1), ((timer) {
       setState(() {
         DateTime current = DateTime.now();
+
         DateTime next = prayerTimes.timeForPrayer(prayerTimes.nextPrayer());
         Duration diff = current.difference(next).abs();
         //print("currentTime: $current next: $next diff: $diff");
         formattedDiff = diff.toString().substring(0, 7);
+        //print("formattedDiff= $formattedDiff");
         //print(formattedDiff);
       });
     }));
@@ -59,7 +69,6 @@ class _HomeWidgetState extends State<HomeWidget> {
       timeLeft(prayerTimes);
       convertLoc();
     });
-
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [

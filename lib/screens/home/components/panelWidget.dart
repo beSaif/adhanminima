@@ -6,6 +6,7 @@ import 'package:adhanminima/utils/sizedbox.dart';
 import 'package:adhanminima/utils/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PanelWidget extends StatefulWidget {
   AsyncSnapshot<Position> position;
@@ -45,9 +46,17 @@ class _PanelWidgetState extends State<PanelWidget> {
         Coordinates(lat!, long!); // Replace with your own location lat, lng.
     final params = CalculationMethod.karachi.getParameters();
     params.madhab = Madhab.shafi;
-    final prayerTimes = PrayerTimes.today(myCoordinates, params);
+    var prayerTimes = PrayerTimes.today(myCoordinates, params);
+    if (prayerTimes.nextPrayer().name == "none") {
+      final now = DateTime.now();
+      final tomorrow =
+          DateComponents.from(DateTime(now.year, now.month, now.day + 1));
+      //print(tomorrow);
+      prayerTimes = PrayerTimes(myCoordinates, tomorrow, params);
+    }
     String nextPrayer = prayerTimes.nextPrayer().name[0].toUpperCase() +
         prayerTimes.nextPrayer().name.substring(1);
+
     return Column(
       children: [
         buildDragHandle(),
@@ -107,6 +116,28 @@ class _PanelWidgetState extends State<PanelWidget> {
                 verticalBox(2),
                 const Divider(
                   color: Colors.white,
+                ),
+                verticalBox(10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'developed by ',
+                      style: cusTextStyle(12, FontWeight.w400),
+                    ),
+                    GestureDetector(
+                      onTap: () async {
+                        //print("Launching @be.saif insta");
+                        const String url = 'https://www.instagram.com/be.saif/';
+                        if (await canLaunch(url)) {
+                          await launch(url);
+                        }
+                      },
+                      child: Text('be.Saif',
+                          style: cusTextStyle(15, FontWeight.w700)),
+                    ),
+                  ],
                 )
               ],
             );
