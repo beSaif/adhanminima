@@ -1,4 +1,5 @@
 // ignore_for_file: file_names, must_be_immutable
+import 'package:adhanminima/api/notification_api.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:adhan/adhan.dart';
@@ -25,6 +26,7 @@ class PanelWidget extends StatefulWidget {
 }
 
 class _PanelWidgetState extends State<PanelWidget> {
+  late PrayerTimes prayerTimes;
   var dragIcon = Icons.keyboard_arrow_up_outlined;
 
   void togglePanel() {
@@ -38,7 +40,26 @@ class _PanelWidgetState extends State<PanelWidget> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
+
+    NotificationApi.init(initScheduled: true);
+    listenNotifications();
+    prayerTimes = getCords();
+    //setNotification(prayerTimes);
+  }
+
+  void listenNotifications() {
+    void onClickedNotification(String? payload) => {
+          // Navigator.push(
+          //     context, MaterialPageRoute(builder: (context) => const Main()));
+          //print("Notification clicked")
+        };
+
+    NotificationApi.onNotifications.stream.listen(onClickedNotification);
+  }
+
+  getCords() {
     var lat = widget.position.data?.latitude;
     var long = widget.position.data?.longitude;
     //print('Panel Widget\n\tlat: $lat long: $long');
@@ -54,6 +75,41 @@ class _PanelWidgetState extends State<PanelWidget> {
       //print(tomorrow);
       prayerTimes = PrayerTimes(myCoordinates, tomorrow, params);
     }
+    return prayerTimes;
+  }
+
+  void setNotificationMethod(
+    int id,
+    String prayerName,
+    String prayerTime,
+  ) {
+    NotificationApi.showScheduledNotification(
+        id: id,
+        title: 'Time for $prayerName',
+        body:
+            "$prayerName at ${DateFormat.jm().format(DateTime.parse(prayerTime))}",
+        payload: prayerName,
+        times: DateTime.parse(prayerTime),
+        scheduleDate: DateTime.now());
+  }
+
+  Future<void> setNotification(prayerTimes) async {
+    int notificationLength = await NotificationApi().listOfNotifications();
+    if (notificationLength != 6) {
+      setNotificationMethod(0, 'Farj', prayerTimes.fajr.toString());
+      setNotificationMethod(1, 'Sunrise', prayerTimes.sunrise.toString());
+      setNotificationMethod(2, 'Duhr', prayerTimes.dhuhr.toString());
+      setNotificationMethod(3, 'Asr', prayerTimes.asr.toString());
+      setNotificationMethod(4, 'Maghrib', prayerTimes.maghrib.toString());
+      setNotificationMethod(5, 'Isha', prayerTimes.isha.toString());
+      //print("Added all notification");
+    } else {
+      //print("notificaiton exists");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     String nextPrayer = prayerTimes.nextPrayer().name[0].toUpperCase() +
         prayerTimes.nextPrayer().name.substring(1);
 
@@ -150,6 +206,7 @@ class _PanelWidgetState extends State<PanelWidget> {
   Widget buildDragHandle() => GestureDetector(
         onTap: () => setState(() {
           togglePanel();
+          setNotification(prayerTimes);
           //prayerTimesMethod();
         }),
         child: Center(
@@ -168,15 +225,9 @@ class _PanelWidgetState extends State<PanelWidget> {
       children: [
         Row(
           children: [
-            Icon(
-              Icons.notifications_none,
-              color: (() {
-                if (alarm) {
-                  return Colors.white;
-                } else {
-                  return Colors.grey;
-                }
-              }()),
+            const Icon(
+              Icons.notifications_sharp,
+              color: Colors.white70,
             ),
             horizontalBox(20),
             Text(prayer,

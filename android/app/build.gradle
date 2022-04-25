@@ -32,6 +32,11 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
+    
+    lintOptions {
+        checkReleaseBuilds false
+    }
+
     compileSdkVersion flutter.compileSdkVersion
 
     compileOptions {
