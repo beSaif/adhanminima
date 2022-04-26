@@ -1,32 +1,31 @@
 // ignore_for_file: file_names, must_be_immutable
-import 'package:adhanminima/api/notification_api.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:intl/intl.dart';
 import 'package:adhan/adhan.dart';
+import 'package:adhanminima/api/notification_api.dart';
 import 'package:adhanminima/utils/sizedbox.dart';
 import 'package:adhanminima/utils/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PanelWidget extends StatefulWidget {
-  AsyncSnapshot<Position> position;
   final ScrollController controller;
   final PanelController panelController;
+  PrayerTimes prayerTimes;
 
-  PanelWidget(
-      {Key? key,
-      required this.position,
-      required this.controller,
-      required this.panelController})
-      : super(key: key);
+  PanelWidget({
+    Key? key,
+    required this.controller,
+    required this.panelController,
+    required this.prayerTimes,
+  }) : super(key: key);
 
   @override
   State<PanelWidget> createState() => _PanelWidgetState();
 }
 
 class _PanelWidgetState extends State<PanelWidget> {
-  late PrayerTimes prayerTimes;
+  late PrayerTimes prayerTimes = widget.prayerTimes;
   var dragIcon = Icons.keyboard_arrow_up_outlined;
 
   void togglePanel() {
@@ -45,7 +44,6 @@ class _PanelWidgetState extends State<PanelWidget> {
 
     NotificationApi.init(initScheduled: true);
     listenNotifications();
-    prayerTimes = getCords();
     //setNotification(prayerTimes);
   }
 
@@ -57,25 +55,6 @@ class _PanelWidgetState extends State<PanelWidget> {
         };
 
     NotificationApi.onNotifications.stream.listen(onClickedNotification);
-  }
-
-  getCords() {
-    var lat = widget.position.data?.latitude;
-    var long = widget.position.data?.longitude;
-    //print('Panel Widget\n\tlat: $lat long: $long');
-    final myCoordinates =
-        Coordinates(lat!, long!); // Replace with your own location lat, lng.
-    final params = CalculationMethod.karachi.getParameters();
-    params.madhab = Madhab.shafi;
-    var prayerTimes = PrayerTimes.today(myCoordinates, params);
-    if (prayerTimes.nextPrayer().name == "none") {
-      final now = DateTime.now();
-      final tomorrow =
-          DateComponents.from(DateTime(now.year, now.month, now.day + 1));
-      //print(tomorrow);
-      prayerTimes = PrayerTimes(myCoordinates, tomorrow, params);
-    }
-    return prayerTimes;
   }
 
   void setNotificationMethod(
@@ -119,13 +98,8 @@ class _PanelWidgetState extends State<PanelWidget> {
         Padding(
           padding: const EdgeInsets.fromLTRB(45, 45, 45, 25),
           child: (() {
-            // ignore: unnecessary_null_comparison
-            if (prayerTimes == null) {
-              return const CircularProgressIndicator();
-            }
             return Column(
               children: [
-                //
                 prayerTime(false, 'Fajr',
                     DateFormat.jm().format(prayerTimes.fajr), nextPrayer),
                 verticalBox(2),
@@ -207,7 +181,6 @@ class _PanelWidgetState extends State<PanelWidget> {
         onTap: () => setState(() {
           togglePanel();
           setNotification(prayerTimes);
-          //prayerTimesMethod();
         }),
         child: Center(
           child: Icon(

@@ -1,9 +1,16 @@
+import 'dart:async';
+
+import 'package:adhan/adhan.dart';
 import 'package:adhanminima/screens/home/components/homeWidget.dart';
 import 'package:adhanminima/screens/home/components/locationDialog.dart';
 import 'package:adhanminima/screens/home/components/panelWidget.dart';
+import 'package:adhanminima/utils/sizedbox.dart';
+import 'package:adhanminima/utils/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:async/async.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -14,6 +21,12 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final panelController = PanelController();
+  var formattedDiff = "0";
+  var lat = 0.0;
+  var long = 0.0;
+  late Placemark place;
+  late PrayerTimes prayerTimes;
+  Coordinates myCoordinates = Coordinates(0, 0);
 
   Future<Position> _determinePosition() async {
     bool serviceEnabled;
@@ -30,6 +43,7 @@ class _HomeState extends State<Home> {
             return locationDialog(dialogContext);
           });
       //openLocationSetting();
+
       return Future.error('Location services are disabled.');
     }
 
@@ -54,7 +68,58 @@ class _HomeState extends State<Home> {
 
     // When we reach here, permissions are granted and we can
     // continue accessing the position of the device.
+
+    //print(Geolocator.getCurrentPosition());
+
+    //getCords();
     return await Geolocator.getCurrentPosition();
+  }
+
+  Future<Placemark> convertLoc(lat, long) async {
+    List<Placemark> placemarks = await placemarkFromCoordinates(lat, long);
+    Placemark _place = placemarks[0];
+    //print("Place: ${place}");
+    return _place;
+  }
+
+  Future<PrayerTimes> getCords() async {
+    var cords = await _determinePosition();
+    lat = cords.latitude;
+    long = cords.longitude;
+    place = await convertLoc(lat, long);
+    //print(place.country);
+
+    //print(cords);
+    myCoordinates =
+        Coordinates(lat, long); // Replace with your own location lat, lng.
+    final params = CalculationMethod.karachi.getParameters();
+    params.madhab = Madhab.shafi;
+    prayerTimes = PrayerTimes.today(myCoordinates, params);
+
+    if (prayerTimes.nextPrayer().name == "none") {
+      final now = DateTime.now();
+      final tomorrow =
+          DateComponents.from(DateTime(now.year, now.month, now.day + 1));
+      //print(tomorrow);
+      prayerTimes = PrayerTimes(myCoordinates, tomorrow, params);
+    }
+
+    return prayerTimes;
+  }
+
+  AsyncMemoizer _memoizer = AsyncMemoizer();
+
+  _fetchData() {
+    return _memoizer.runOnce(() async {
+      await Future.delayed(const Duration(seconds: 2));
+      return getCords();
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _memoizer = AsyncMemoizer();
   }
 
   @override
@@ -72,19 +137,35 @@ class _HomeState extends State<Home> {
             fit: BoxFit.cover,
           )),
       child: FutureBuilder(
-          future: _determinePosition(),
-          builder: (BuildContext context, AsyncSnapshot<Position> position) {
-            if (!position.hasData) {
-              return const Center(child: CircularProgressIndicator());
+          future: _fetchData(),
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            String delayMessage = "Restart the app if it's taking too long...";
+            if (!snapshot.hasData) {
+              return Center(
+                  child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(),
+                  verticalBox(20),
+                  Text(
+                    delayMessage,
+                    textAlign: TextAlign.center,
+                    style: cusTextStyle(16, FontWeight.w400),
+                  )
+                ],
+              ));
             }
             return SlidingUpPanel(
               controller: panelController,
               parallaxEnabled: true,
               parallaxOffset: .6,
               color: Colors.transparent,
-              body: HomeWidget(position: position),
+              body: HomeWidget(
+                prayerTimes: snapshot.data,
+                place: place,
+              ),
               panelBuilder: (controller) => PanelWidget(
-                position: position,
+                prayerTimes: prayerTimes,
                 controller: controller,
                 panelController: panelController,
               ),
