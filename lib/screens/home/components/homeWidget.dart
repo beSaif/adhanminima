@@ -2,41 +2,51 @@
 
 import 'dart:async';
 
+import 'package:adhan/adhan.dart';
 import 'package:adhanminima/utils/sizedbox.dart';
 import 'package:adhanminima/utils/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 
-class TimeLeft extends StatefulWidget {
+class HomeWidget extends StatefulWidget {
+  PrayerTimes prayerTimes;
+  Placemark place;
+  HomeWidget({required this.prayerTimes, required this.place, Key? key})
+      : super(key: key);
+
   @override
-  State<TimeLeft> createState() => _TimeLeftState();
+  State<HomeWidget> createState() => _HomeWidgetState();
 }
 
-class _TimeLeftState extends State<TimeLeft> {
+class _HomeWidgetState extends State<HomeWidget> {
+  late PrayerTimes prayerTimes = widget.prayerTimes;
+  late Placemark place = widget.place;
+
   var formattedDiff = "0";
 
-  // void timeLeft(prayerTimes) async {
-  //   Timer.periodic(const Duration(seconds: 1), ((timer) {
-  //     setState(() {
-  //       DateTime current = DateTime.now();
+  void timeLeft(prayerTimes) async {
+    Timer.periodic(const Duration(seconds: 1), ((timer) {
+      setState(() {
+        DateTime current = DateTime.now();
 
-  //       DateTime next = prayerTimes.timeForPrayer(prayerTimes.nextPrayer());
-  //       Duration diff = current.difference(next).abs();
-  //       //print("currentTime: $current next: $next diff: $diff");
-  //       formattedDiff = diff.toString().substring(0, 7);
-  //       //print("formattedDiff= $formattedDiff");
-  //       //print(formattedDiff);
-  //     });
-  //   }));
-  // }
+        DateTime next = prayerTimes.timeForPrayer(prayerTimes.nextPrayer());
+        Duration diff = current.difference(next).abs();
+        //print("currentTime: $current next: $next diff: $diff");
+        formattedDiff = diff.toString().substring(0, 7);
+        //print("formattedDiff= $formattedDiff");
+        //print(formattedDiff);
+      });
+    }));
+  }
 
   @override
   Widget build(BuildContext context) {
-    // if (mounted) {
-    //   // check whether the state object is in tree
-    //   setState(() {
-    //     timeLeft(5);
-    //   });
-    // }
+    if (mounted) {
+      // check whether the state object is in tree
+      setState(() {
+        timeLeft(prayerTimes);
+      });
+    }
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -57,11 +67,11 @@ class _TimeLeftState extends State<TimeLeft> {
                 Row(
                   children: [
                     Text(
-                      "5",
+                      prayerTimes.nextPrayer().name[0].toUpperCase(),
                       style: cusTextStyle(24, FontWeight.w400),
                     ),
                     Text(
-                      "5",
+                      prayerTimes.nextPrayer().name.substring(1),
                       style: cusTextStyle(24, FontWeight.w400),
                     ),
                   ],
@@ -80,11 +90,11 @@ class _TimeLeftState extends State<TimeLeft> {
                 Row(
                   children: [
                     Text(
-                      "INdia",
+                      place.locality.toString(),
                       style: cusTextStyle(18, FontWeight.w200),
                     ),
                     Text(
-                      "country",
+                      ", ${place.isoCountryCode.toString()}",
                       style: cusTextStyle(18, FontWeight.w200),
                     ),
                   ],
