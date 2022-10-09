@@ -1,3 +1,4 @@
+import 'package:adhanminima/API/api_services.dart';
 import 'package:adhanminima/Screens/home/Components/HomeBody.dart';
 import 'package:flutter/material.dart';
 
@@ -12,6 +13,7 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
+    APIServices.determinePosition(context);
   }
 
   @override

@@ -4,7 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import '../Screens/home/Components/LocationDialog.dart';
 
 class APIServices {
-  Future<Position> _determinePosition(context) async {
+  static Future<Position> determinePosition(context) async {
     bool serviceEnabled;
     LocationPermission permission;
 

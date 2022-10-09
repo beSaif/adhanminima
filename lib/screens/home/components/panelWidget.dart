@@ -52,7 +52,7 @@ class _PanelWidgetState extends State<PanelWidget> {
                   height: 10,
                 ),
                 SizedBox(
-                  height: 300,
+                  height: 370,
                   child: ListView.builder(
                     itemCount: 5,
                     itemBuilder: (context, index) {
@@ -146,7 +146,7 @@ class _PanelWidgetState extends State<PanelWidget> {
         const Divider(
           color: Colors.white,
         ),
-        verticalBox(10),
+        verticalBox(20),
       ],
     );
   }
