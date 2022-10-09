@@ -1,4 +1,4 @@
-import 'package:adhanminima/screens/home/home.dart';
+import 'package:adhanminima/screens/home/Home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
