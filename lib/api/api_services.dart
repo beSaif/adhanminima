@@ -1,7 +1,9 @@
+import 'package:adhanminima/GetX/prayerdata.dart';
 import 'package:adhanminima/Screens/home/Components/locationDialog.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:get/get.dart';
 
 class APIServices {
   static Future<Position> determinePosition(context) async {
@@ -51,6 +53,11 @@ class APIServices {
   }
 
   static Future<List<Placemark>> getPlacemark(Position position) async {
+    final PrayerDataController prayerDataController =
+        Get.put(PrayerDataController(), permanent: false);
+    List<Placemark> placemarks =
+        await placemarkFromCoordinates(position.latitude, position.longitude);
+    prayerDataController.updatePlacemark(placemarks);
     return placemarkFromCoordinates(position.latitude, position.longitude);
   }
 }

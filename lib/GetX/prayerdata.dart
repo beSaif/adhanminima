@@ -23,4 +23,9 @@ class PrayerDataController extends GetxController {
     placemarks = getPlacemark;
     update();
   }
+
+  void updatePlacemark(List<Placemark> currentPlacemark) {
+    placemarks = currentPlacemark;
+    update();
+  }
 }
