@@ -62,7 +62,7 @@ class APIServices {
   }
 
   static Future<PrayerTimes> getPrayerTime(Position position) async {
-    final myCoordinates = Coordinates(position.latitude, position.latitude);
+    final myCoordinates = Coordinates(position.latitude, position.longitude);
 
     final params = CalculationMethod.karachi.getParameters();
     params.madhab = Madhab.shafi;

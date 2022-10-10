@@ -13,7 +13,7 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
-    APIServices.determinePosition(context);
+    APIServices.fetchAllData(context);
   }
 
   @override
