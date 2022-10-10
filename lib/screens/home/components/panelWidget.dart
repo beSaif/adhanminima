@@ -1,8 +1,6 @@
-import 'package:adhanminima/api/notification_api.dart';
 import 'package:adhanminima/utils/sizedbox.dart';
 import 'package:adhanminima/utils/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -10,7 +8,7 @@ class PanelWidget extends StatefulWidget {
   final ScrollController controller;
   final PanelController panelController;
 
-  PanelWidget({
+  const PanelWidget({
     Key? key,
     required this.controller,
     required this.panelController,
@@ -48,7 +46,7 @@ class _PanelWidgetState extends State<PanelWidget> {
             Column(
               children: [
                 buildDragHandle(),
-                SizedBox(
+                const SizedBox(
                   height: 10,
                 ),
                 SizedBox(

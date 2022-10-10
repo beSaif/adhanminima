@@ -1,7 +1,7 @@
+import 'package:adhanminima/Screens/home/Components/locationDialog.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-
-import '../Screens/home/Components/LocationDialog.dart';
 
 class APIServices {
   static Future<Position> determinePosition(context) async {
@@ -15,8 +15,7 @@ class APIServices {
       showDialog(
           context: context,
           builder: (context) {
-            var dialogContext = context;
-            return locationDialog(dialogContext);
+            return locationDialogue(context);
           });
       //openLocationSetting();
 
@@ -49,5 +48,9 @@ class APIServices {
 
     //getCords();
     return await Geolocator.getCurrentPosition();
+  }
+
+  static Future<List<Placemark>> getPlacemark(Position position) async {
+    return placemarkFromCoordinates(position.latitude, position.longitude);
   }
 }

@@ -1,17 +1,22 @@
 // ignore_for_file: file_names, import_of_legacy_library_into_null_safe, must_be_immutable
 
-import 'dart:async';
-
+import 'package:adhanminima/GetX/prayerdata.dart';
 import 'package:adhanminima/utils/sizedbox.dart';
 import 'package:adhanminima/utils/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class TimeLeft extends StatefulWidget {
+  const TimeLeft({Key? key}) : super(key: key);
+
   @override
   State<TimeLeft> createState() => _TimeLeftState();
 }
 
 class _TimeLeftState extends State<TimeLeft> {
+  final PrayerDataController prayerDataController =
+      Get.put(PrayerDataController(), permanent: false);
+
   var formattedDiff = "0";
 
   // void timeLeft(prayerTimes) async {
@@ -31,6 +36,9 @@ class _TimeLeftState extends State<TimeLeft> {
 
   @override
   Widget build(BuildContext context) {
+    final String locality = prayerDataController.placemarks.first.locality!;
+    final String country =
+        prayerDataController.placemarks.first.isoCountryCode!;
     // if (mounted) {
     //   // check whether the state object is in tree
     //   setState(() {
@@ -80,11 +88,11 @@ class _TimeLeftState extends State<TimeLeft> {
                 Row(
                   children: [
                     Text(
-                      "INdia",
+                      "$locality, ",
                       style: cusTextStyle(18, FontWeight.w200),
                     ),
                     Text(
-                      "country",
+                      country,
                       style: cusTextStyle(18, FontWeight.w200),
                     ),
                   ],
