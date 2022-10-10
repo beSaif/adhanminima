@@ -3,7 +3,6 @@ import 'package:adhanminima/utils/sizedbox.dart';
 import 'package:android_intent/android_intent.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 
 AlertDialog locationDialogue(context) {

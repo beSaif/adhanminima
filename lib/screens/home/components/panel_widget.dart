@@ -1,6 +1,11 @@
+import 'package:adhan/adhan.dart';
+import 'package:adhanminima/GetX/prayerdata.dart';
 import 'package:adhanminima/utils/sizedbox.dart';
 import 'package:adhanminima/utils/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:sizer/sizer.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -19,6 +24,9 @@ class PanelWidget extends StatefulWidget {
 }
 
 class _PanelWidgetState extends State<PanelWidget> {
+  final PrayerDataController prayerDataController =
+      Get.put(PrayerDataController(), permanent: false);
+
   var dragIcon = Icons.keyboard_arrow_up_outlined;
 
   void togglePanel() {
@@ -38,6 +46,15 @@ class _PanelWidgetState extends State<PanelWidget> {
 
   @override
   Widget build(BuildContext context) {
+    PrayerTimes prayerTimes = prayerDataController.allData.prayerTimes;
+    List prayerDetails = [
+      {'Fajr': prayerTimes.fajr},
+      {'Sunrise': prayerTimes.sunrise},
+      {'Duhr': prayerTimes.dhuhr},
+      {'Asr': prayerTimes.asr},
+      {'Maghrib': prayerTimes.maghrib},
+      {'Isha': prayerTimes.isha},
+    ];
     return Padding(
         padding: const EdgeInsets.fromLTRB(45, 10, 45, 25),
         child: Column(
@@ -50,11 +67,11 @@ class _PanelWidgetState extends State<PanelWidget> {
                   height: 10,
                 ),
                 SizedBox(
-                  height: 370,
+                  height: 41.56.h,
                   child: ListView.builder(
-                    itemCount: 5,
+                    itemCount: 6,
                     itemBuilder: (context, index) {
-                      return prayerTime();
+                      return prayerTime(prayerDetails[index]);
                     },
                   ),
                 ),
@@ -99,8 +116,18 @@ class _PanelWidgetState extends State<PanelWidget> {
         ),
       );
 
-  Widget prayerTime() {
-    //print("prayer: $prayer, nextPrayer: $nextPrayer");
+  Widget prayerTime(prayerDetails) {
+    final PrayerDataController prayerDataController =
+        Get.put(PrayerDataController(), permanent: false);
+    // Removing unwanted brackets from key
+    String prayer = prayerDetails.keys
+        .toString()
+        .substring(1, prayerDetails.keys.toString().length - 1);
+
+    String nextPrayer =
+        prayerDataController.allData.prayerTimes.nextPrayer().name.toString();
+
+    String time = DateFormat.jm().format(prayerDetails[prayer]);
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
@@ -114,27 +141,21 @@ class _PanelWidgetState extends State<PanelWidget> {
                   color: Colors.white70,
                 ),
                 horizontalBox(20),
-                Text("prayer",
+                Text(prayer,
                     style: TextStyle(
                         fontFamily: 'Halenoir',
-                        color: (() {
-                          // if (nextPrayer[0] == prayer[0]) {
-                          //   return Colors.white;
-                          // }
-                          return Colors.white70;
-                        }()),
+                        color: prayer[0] == nextPrayer[0].toUpperCase()
+                            ? Colors.white
+                            : Colors.white70,
                         fontSize: 24,
-                        fontWeight: (() {
-                          // if (nextPrayer[0] == prayer[0]) {
-                          //   return FontWeight.w900;
-                          // }
-                          return FontWeight.w400;
-                        }()))),
+                        fontWeight: prayer[0] == nextPrayer[0].toUpperCase()
+                            ? FontWeight.w900
+                            : FontWeight.w400)),
               ],
             ),
             Row(
               children: [
-                Text("time", style: cusTextStyle(24, FontWeight.w300)),
+                Text(time, style: cusTextStyle(24, FontWeight.w300)),
                 horizontalBox(10),
               ],
             )
@@ -144,7 +165,7 @@ class _PanelWidgetState extends State<PanelWidget> {
         const Divider(
           color: Colors.white,
         ),
-        verticalBox(20),
+        verticalBox(10),
       ],
     );
   }

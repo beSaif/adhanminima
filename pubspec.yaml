@@ -28,6 +28,7 @@ dependencies:
   rename: ^2.0.1
   restart_app: ^1.1.0
   rxdart: ^0.27.3
+  sizer: ^2.0.15
   sliding_up_panel: ^2.0.0+1
   url_launcher: ^6.0.20
 

@@ -1,4 +1,6 @@
+import 'package:adhan/adhan.dart';
 import 'package:adhanminima/GetX/prayerdata.dart';
+import 'package:adhanminima/Model/all_data.dart';
 import 'package:adhanminima/Screens/home/Components/locationDialog.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
@@ -53,11 +55,42 @@ class APIServices {
   }
 
   static Future<List<Placemark>> getPlacemark(Position position) async {
-    final PrayerDataController prayerDataController =
-        Get.put(PrayerDataController(), permanent: false);
     List<Placemark> placemarks =
         await placemarkFromCoordinates(position.latitude, position.longitude);
-    prayerDataController.updatePlacemark(placemarks);
-    return placemarkFromCoordinates(position.latitude, position.longitude);
+
+    return placemarks;
+  }
+
+  static Future<PrayerTimes> getPrayerTime(Position position) async {
+    final myCoordinates = Coordinates(position.latitude, position.latitude);
+
+    final params = CalculationMethod.karachi.getParameters();
+    params.madhab = Madhab.shafi;
+    PrayerTimes prayerTimes = PrayerTimes.today(myCoordinates, params);
+    if (prayerTimes.nextPrayer().name == "none") {
+      final now = DateTime.now();
+      final tomorrow =
+          DateComponents.from(DateTime(now.year, now.month, now.day + 1));
+      //print(tomorrow);
+      prayerTimes = PrayerTimes(myCoordinates, tomorrow, params);
+    }
+    return prayerTimes;
+  }
+
+  static Future<AllData> fetchAllData(context) async {
+    final PrayerDataController prayerDataController =
+        Get.put(PrayerDataController(), permanent: false);
+    Position position = await determinePosition(context);
+
+    List<Placemark> placemarks = await getPlacemark(position);
+
+    PrayerTimes prayerTimes = await getPrayerTime(position);
+
+    AllData allData = AllData(
+        position: position, placemarks: placemarks, prayerTimes: prayerTimes);
+
+    prayerDataController.updateAllData(allData);
+
+    return allData;
   }
 }

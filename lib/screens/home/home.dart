@@ -1,5 +1,5 @@
 import 'package:adhanminima/API/api_services.dart';
-import 'package:adhanminima/Screens/home/Components/HomeBody.dart';
+import 'package:adhanminima/Screens/home/Components/home_body.dart';
 import 'package:flutter/material.dart';
 
 class Home extends StatefulWidget {
