@@ -1,10 +1,13 @@
+import 'dart:isolate';
+
 import 'package:adhanminima/API/api_services.dart';
 import 'package:adhanminima/GetX/prayerdata.dart';
 import 'package:adhanminima/Screens/home/Components/background.dart';
 import 'package:adhanminima/Screens/home/Components/TimeLeft.dart';
 import 'package:adhanminima/Screens/home/Components/loading_indicator.dart';
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:adhanminima/screens/home/components/panel_widget.dart';
+import 'package:adhanminima/screens/home/Components/panel_widget.dart';
 import 'package:get/get.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
@@ -28,6 +31,8 @@ class _HomeBodyState extends State<HomeBody> {
       child: FutureBuilder(
           future: APIServices.fetchAllData(context),
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            const int notificationID = 0;
+
             if (!snapshot.hasData) {
               return loadingIndicator();
             }

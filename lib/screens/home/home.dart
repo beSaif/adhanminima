@@ -1,4 +1,5 @@
 import 'package:adhanminima/API/api_services.dart';
+import 'package:adhanminima/API/notification_api.dart';
 import 'package:adhanminima/Screens/home/Components/home_body.dart';
 import 'package:flutter/material.dart';
 
@@ -14,6 +15,7 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     APIServices.fetchAllData(context);
+    LocalNotificationService().intialize();
   }
 
   @override

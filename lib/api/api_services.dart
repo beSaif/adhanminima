@@ -1,4 +1,5 @@
 import 'package:adhan/adhan.dart';
+import 'package:adhanminima/API/notification_api.dart';
 import 'package:adhanminima/GetX/prayerdata.dart';
 import 'package:adhanminima/Model/all_data.dart';
 import 'package:adhanminima/Screens/home/Components/locationDialog.dart';
@@ -90,6 +91,8 @@ class APIServices {
         position: position, placemarks: placemarks, prayerTimes: prayerTimes);
 
     prayerDataController.updateAllData(allData);
+
+    LocalNotificationService().setScheduledNotifications();
 
     return allData;
   }

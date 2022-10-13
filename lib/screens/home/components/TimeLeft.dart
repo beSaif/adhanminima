@@ -2,11 +2,14 @@
 
 import 'dart:async';
 import 'package:adhan/adhan.dart';
+import 'package:adhanminima/API/notification_api.dart';
 import 'package:adhanminima/GetX/prayerdata.dart';
 import 'package:adhanminima/utils/sizedbox.dart';
 import 'package:adhanminima/utils/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 class TimeLeft extends StatefulWidget {
   const TimeLeft({Key? key}) : super(key: key);
@@ -20,6 +23,11 @@ class _TimeLeftState extends State<TimeLeft> {
       Get.put(PrayerDataController(), permanent: false);
 
   var formattedDiff = "0";
+
+  @override
+  void initState() {
+    // TODO: implement initState
+  }
 
   @override
   Widget build(BuildContext context) {
