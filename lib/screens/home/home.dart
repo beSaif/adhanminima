@@ -5,6 +5,7 @@ import 'package:adhanminima/screens/home/components/locationDialog.dart';
 import 'package:adhanminima/screens/home/components/panelWidget.dart';
 import 'package:adhanminima/utils/sizedbox.dart';
 import 'package:adhanminima/utils/theme.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -30,6 +31,11 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     _getCoordinates();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   Future<Position> _determinePosition() async {
@@ -71,6 +77,10 @@ class _HomeState extends State<Home> {
     Position position = await _determinePosition();
     lat = position.latitude;
     long = position.longitude;
+    if (kDebugMode) {
+      lat = 12.4996;
+      long = 74.9869;
+    }
     place = await _convertLocation(lat, long);
     myCoordinates = Coordinates(lat, long);
     final params = CalculationMethod.karachi.getParameters()
@@ -115,6 +125,16 @@ class _HomeState extends State<Home> {
                 parallaxEnabled: true,
                 parallaxOffset: .6,
                 color: Colors.transparent,
+                // body: PageView(
+                //   children: [
+                //     HomeWidget(
+                //       prayerTimes: snapshot.data,
+                //       place: place,
+                //     ),
+                //     Container(), // Placeholder on the left side
+                //     Container(), // Placeholder on the right side
+                //   ],
+                // ),
                 body: HomeWidget(
                   prayerTimes: snapshot.data,
                   place: place,

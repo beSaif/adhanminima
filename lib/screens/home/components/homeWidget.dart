@@ -1,5 +1,3 @@
-// ignore_for_file: file_names, import_of_legacy_library_into_null_safe, must_be_immutable
-
 import 'dart:async';
 
 import 'package:adhan/adhan.dart';
@@ -9,9 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 
 class HomeWidget extends StatefulWidget {
-  PrayerTimes prayerTimes;
-  Placemark place;
-  HomeWidget({required this.prayerTimes, required this.place, Key? key})
+  final PrayerTimes prayerTimes;
+  final Placemark place;
+  const HomeWidget({required this.prayerTimes, required this.place, Key? key})
       : super(key: key);
 
   @override
@@ -19,34 +17,47 @@ class HomeWidget extends StatefulWidget {
 }
 
 class _HomeWidgetState extends State<HomeWidget> {
-  late PrayerTimes prayerTimes = widget.prayerTimes;
-  late Placemark place = widget.place;
+  late PrayerTimes prayerTimes;
+  late Placemark place;
 
-  var formattedDiff = "0";
+  Timer? _timer;
+  String formattedDiff = "0";
 
-  void timeLeft(prayerTimes) async {
-    Timer.periodic(const Duration(seconds: 1), ((timer) {
-      setState(() {
-        DateTime current = DateTime.now();
+  @override
+  void initState() {
+    super.initState();
+    prayerTimes = widget.prayerTimes;
+    place = widget.place;
+    _startTimer();
+  }
 
-        DateTime next = prayerTimes.timeForPrayer(prayerTimes.nextPrayer());
-        Duration diff = current.difference(next).abs();
-        //print("currentTime: $current next: $next diff: $diff");
-        formattedDiff = diff.toString().substring(0, 7);
-        //print("formattedDiff= $formattedDiff");
-        //print(formattedDiff);
-      });
-    }));
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          DateTime current = DateTime.now();
+          DateTime? next = prayerTimes.timeForPrayer(prayerTimes.nextPrayer());
+
+          if (next != null) {
+            Duration diff = current.difference(next).abs();
+            formattedDiff = diff.toString().substring(0, 7);
+          } else {
+            formattedDiff =
+                "N/A"; // Handle the case where next prayer time is null
+          }
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (mounted) {
-      // check whether the state object is in tree
-      setState(() {
-        timeLeft(prayerTimes);
-      });
-    }
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
