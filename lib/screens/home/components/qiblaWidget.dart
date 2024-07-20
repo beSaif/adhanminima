@@ -117,7 +117,10 @@ class QiblahCompassWidget extends StatelessWidget {
                   child: SvgPicture.asset(
                     'assets/compass.svg',
                     height: 250,
-                    color: Colors.white,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.white,
+                      BlendMode.srcIn,
+                    ),
                   ),
                 ),
                 Transform.rotate(
@@ -182,7 +185,10 @@ class _SpinningNeedleState extends State<SpinningNeedle>
                   angle: -_controller.value * 2.0 * pi,
                   child: SvgPicture.asset(
                     'assets/compass.svg',
-                    color: Colors.white,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.white,
+                      BlendMode.srcIn,
+                    ),
                   ),
                 ),
                 Transform.rotate(

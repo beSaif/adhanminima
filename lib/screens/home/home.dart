@@ -6,7 +6,6 @@ import 'package:adhanminima/screens/home/components/panelWidget.dart';
 import 'package:adhanminima/screens/home/components/qiblaWidget.dart';
 import 'package:adhanminima/utils/sizedbox.dart';
 import 'package:adhanminima/utils/theme.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
