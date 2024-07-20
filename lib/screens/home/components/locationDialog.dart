@@ -43,7 +43,8 @@ Widget locationDialog(dialogContext) {
                 width: double.infinity,
                 child: TextButton(
                     style: TextButton.styleFrom(
-                        primary: Colors.white, backgroundColor: Colors.blue),
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.blue),
                     onPressed: () async {
                       openLocationSetting();
                       Navigator.pop(dialogContext);

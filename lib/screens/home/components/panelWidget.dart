@@ -159,9 +159,11 @@ class _PanelWidgetState extends State<PanelWidget> {
                     GestureDetector(
                       onTap: () async {
                         //print("Launching @be.saif insta");
-                        const String url = 'https://www.instagram.com/be.saif/';
-                        if (await canLaunch(url)) {
-                          await launch(url);
+                        const String urlString =
+                            'https://www.instagram.com/be.saif/';
+                        Uri url = Uri.parse(urlString);
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(url);
                         }
                       },
                       child: Text('be.Saif',
