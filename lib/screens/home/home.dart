@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
-import 'package:async/async.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);

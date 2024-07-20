@@ -3,7 +3,9 @@ import 'package:adhan/adhan.dart';
 import 'package:adhanminima/api/notification_api.dart';
 import 'package:adhanminima/utils/sizedbox.dart';
 import 'package:adhanminima/utils/theme.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -95,85 +97,95 @@ class _PanelWidgetState extends State<PanelWidget> {
     return Column(
       children: [
         buildDragHandle(),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(45, 45, 45, 25),
-          child: (() {
-            return Column(
-              children: [
-                prayerTime(false, 'Fajr',
-                    DateFormat.jm().format(prayerTimes.fajr), nextPrayer),
-                verticalBox(2),
-                const Divider(
-                  color: Colors.white,
-                ),
-                verticalBox(10),
-                //
-                prayerTime(false, 'Sunrise',
-                    DateFormat.jm().format(prayerTimes.sunrise), nextPrayer),
-                verticalBox(2),
-                const Divider(
-                  color: Colors.white,
-                ),
-                verticalBox(10),
-                //
-                prayerTime(false, 'Duhr',
-                    DateFormat.jm().format(prayerTimes.dhuhr), nextPrayer),
-                verticalBox(2),
-                const Divider(
-                  color: Colors.white,
-                ),
-                verticalBox(10),
-                //
-                prayerTime(false, 'Asr',
-                    DateFormat.jm().format(prayerTimes.asr), nextPrayer),
-                verticalBox(2),
-                const Divider(
-                  color: Colors.white,
-                ),
-                verticalBox(10),
-
-                //
-                prayerTime(false, 'Maghrib',
-                    DateFormat.jm().format(prayerTimes.maghrib), nextPrayer),
-                verticalBox(2),
-                const Divider(
-                  color: Colors.white,
-                ),
-                verticalBox(10),
-                //
-                prayerTime(false, 'Isha',
-                    DateFormat.jm().format(prayerTimes.isha), nextPrayer),
-                verticalBox(2),
-                const Divider(
-                  color: Colors.white,
-                ),
-                verticalBox(10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
+        Expanded(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(45, 45, 45, 25),
+              child: (() {
+                return Column(
                   children: [
-                    Text(
-                      'developed by ',
-                      style: cusTextStyle(12, FontWeight.w400),
+                    prayerTime(false, 'Fajr',
+                        DateFormat.jm().format(prayerTimes.fajr), nextPrayer),
+                    verticalBox(2),
+                    const Divider(
+                      color: Colors.white,
                     ),
-                    GestureDetector(
-                      onTap: () async {
-                        //print("Launching @be.saif insta");
-                        const String urlString =
-                            'https://www.instagram.com/be.saif/';
-                        Uri url = Uri.parse(urlString);
-                        if (await canLaunchUrl(url)) {
-                          await launchUrl(url);
-                        }
-                      },
-                      child: Text('be.Saif',
-                          style: cusTextStyle(15, FontWeight.w700)),
+                    verticalBox(10),
+                    //
+                    prayerTime(
+                        false,
+                        'Sunrise',
+                        DateFormat.jm().format(prayerTimes.sunrise),
+                        nextPrayer),
+                    verticalBox(2),
+                    const Divider(
+                      color: Colors.white,
                     ),
+                    verticalBox(10),
+                    //
+                    prayerTime(false, 'Duhr',
+                        DateFormat.jm().format(prayerTimes.dhuhr), nextPrayer),
+                    verticalBox(2),
+                    const Divider(
+                      color: Colors.white,
+                    ),
+                    verticalBox(10),
+                    //
+                    prayerTime(false, 'Asr',
+                        DateFormat.jm().format(prayerTimes.asr), nextPrayer),
+                    verticalBox(2),
+                    const Divider(
+                      color: Colors.white,
+                    ),
+                    verticalBox(10),
+
+                    //
+                    prayerTime(
+                        false,
+                        'Maghrib',
+                        DateFormat.jm().format(prayerTimes.maghrib),
+                        nextPrayer),
+                    verticalBox(2),
+                    const Divider(
+                      color: Colors.white,
+                    ),
+                    verticalBox(10),
+                    //
+                    prayerTime(false, 'Isha',
+                        DateFormat.jm().format(prayerTimes.isha), nextPrayer),
+                    verticalBox(2),
+                    const Divider(
+                      color: Colors.white,
+                    ),
+                    verticalBox(10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          'developed by ',
+                          style: cusTextStyle(12, FontWeight.w400),
+                        ),
+                        GestureDetector(
+                          onTap: () async {
+                            //print("Launching @be.saif insta");
+                            const String urlString =
+                                'https://www.instagram.com/be.saif/';
+                            Uri url = Uri.parse(urlString);
+                            if (await canLaunchUrl(url)) {
+                              await launchUrl(url);
+                            }
+                          },
+                          child: Text('be.Saif',
+                              style: cusTextStyle(15, FontWeight.w700)),
+                        ),
+                      ],
+                    )
                   ],
-                )
-              ],
-            );
-          }()),
+                );
+              }()),
+            ),
+          ),
         )
       ],
     );
