@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:adhan/adhan.dart';
+import 'package:adhanminima/api/quranic_verse.dart';
 import 'package:adhanminima/screens/home/components/homeWidget.dart';
 import 'package:adhanminima/screens/home/components/locationDialog.dart';
 import 'package:adhanminima/screens/home/components/panelWidget.dart';
@@ -54,6 +56,120 @@ class _HomeState extends State<Home> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        height: double.infinity,
+        constraints: const BoxConstraints.expand(),
+        decoration: BoxDecoration(
+          color: Colors.black,
+          image: DecorationImage(
+            image: const AssetImage("assets/bg.jpg"),
+            colorFilter: ColorFilter.mode(
+                Colors.black.withOpacity(0.35), BlendMode.dstATop),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: FutureBuilder(
+          future: _future,
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return _buildLoadingScreen();
+            } else if (snapshot.hasError) {
+              return _buildErrorScreen(snapshot.error);
+            } else if (snapshot.hasData) {
+              return _buildMainWidget(context, snapshot);
+              // return _buildLoadingScreen();
+            } else {
+              return _buildErrorScreen("Unknown error");
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  Column _buildMainWidget(
+      BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+    return Column(
+      children: [
+        Expanded(
+          child: SlidingUpPanel(
+            minHeight: 110,
+            maxHeight: 530 <= MediaQuery.of(context).size.height * 0.68
+                ? 530
+                : MediaQuery.of(context).size.height * 0.68,
+            controller: panelController,
+            parallaxEnabled: true,
+            parallaxOffset: .6,
+            color: Colors.transparent,
+            body: PageView(
+              controller: _pageController,
+              children: [
+                HomeWidget(
+                  prayerTimes: snapshot.data,
+                  place: place,
+                ),
+                const QiblahCompass(),
+                Container(), // Placeholder on the right side
+              ],
+            ),
+            panel: Column(
+              children: [
+                Expanded(
+                  child: PanelWidget(
+                    pageController: _pageController,
+                    currentPage: _currentPage,
+                    prayerTimes: prayerTimes,
+                    panelController: panelController,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoadingScreen() {
+    final int random = 0 + Random().nextInt(49 - 0);
+    Quran verseOfTheDay = quranicVerses[random];
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            verticalBox(20),
+            Text(
+              verseOfTheDay.verse,
+              textAlign: TextAlign.center,
+              style: cusTextStyle(18, FontWeight.w700),
+            ),
+            verticalBox(10),
+            Text(
+              "${verseOfTheDay.surah} ${verseOfTheDay.ayah}",
+              style: cusTextStyle(16, FontWeight.w400),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorScreen(Object? error) {
+    debugPrint('Error: $error');
+    return Center(
+      child: Text(
+        'Error: $error',
+        style: cusTextStyle(16, FontWeight.w400),
+      ),
+    );
   }
 
   Future<Position> _determinePosition() async {
@@ -113,105 +229,5 @@ class _HomeState extends State<Home> {
     }
 
     return prayerTimes;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        height: double.infinity,
-        constraints: const BoxConstraints.expand(),
-        decoration: BoxDecoration(
-          color: Colors.black,
-          image: DecorationImage(
-            image: const AssetImage("assets/bg.jpg"),
-            colorFilter: ColorFilter.mode(
-                Colors.black.withOpacity(0.35), BlendMode.dstATop),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: FutureBuilder(
-          future: _future,
-          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return _buildLoadingScreen();
-            } else if (snapshot.hasError) {
-              return _buildErrorScreen(snapshot.error);
-            } else if (snapshot.hasData) {
-              return Column(
-                children: [
-                  Expanded(
-                    child: SlidingUpPanel(
-                      minHeight: 110,
-                      maxHeight:
-                          530 <= MediaQuery.of(context).size.height * 0.68
-                              ? 530
-                              : MediaQuery.of(context).size.height * 0.68,
-                      controller: panelController,
-                      parallaxEnabled: true,
-                      parallaxOffset: .6,
-                      color: Colors.transparent,
-                      body: PageView(
-                        controller: _pageController,
-                        children: [
-                          HomeWidget(
-                            prayerTimes: snapshot.data,
-                            place: place,
-                          ),
-                          const QiblahCompass(),
-                          Container(), // Placeholder on the right side
-                        ],
-                      ),
-                      panel: Column(
-                        children: [
-                          Expanded(
-                            child: PanelWidget(
-                              pageController: _pageController,
-                              currentPage: _currentPage,
-                              prayerTimes: prayerTimes,
-                              panelController: panelController,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            } else {
-              return _buildErrorScreen("Unknown error");
-            }
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLoadingScreen() {
-    const String delayMessage = "Restart the app if it's taking too long...";
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(),
-          verticalBox(20),
-          Text(
-            delayMessage,
-            textAlign: TextAlign.center,
-            style: cusTextStyle(16, FontWeight.w400),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildErrorScreen(Object? error) {
-    debugPrint('Error: $error');
-    return Center(
-      child: Text(
-        'Error: $error',
-        style: cusTextStyle(16, FontWeight.w400),
-      ),
-    );
   }
 }
