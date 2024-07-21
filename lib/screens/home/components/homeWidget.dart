@@ -27,13 +27,14 @@ class _HomeWidgetState extends State<HomeWidget>
   late PrayerTimes prayerTimes;
   late Placemark place;
   Timer? _timer;
-  String formattedDiff = "0";
+  String formattedDiff = "";
 
   @override
   void initState() {
     super.initState();
     prayerTimes = widget.prayerTimes;
     place = widget.place;
+    _initializeFormattedDiff(); // Initialize the formattedDiff before starting the timer
     _startTimer();
   }
 
@@ -45,7 +46,20 @@ class _HomeWidgetState extends State<HomeWidget>
       setState(() {
         prayerTimes = widget.prayerTimes;
         place = widget.place;
+        _initializeFormattedDiff(); // Update the formattedDiff when the widget updates
       });
+    }
+  }
+
+  void _initializeFormattedDiff() {
+    DateTime current = DateTime.now();
+    DateTime? next = prayerTimes.timeForPrayer(prayerTimes.nextPrayer());
+
+    if (next != null) {
+      Duration diff = current.difference(next).abs();
+      formattedDiff = _formatDuration(diff);
+    } else {
+      formattedDiff = "N/A"; // Handle the case where next prayer time is null
     }
   }
 

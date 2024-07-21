@@ -16,7 +16,8 @@ class QiblahCompass extends StatefulWidget {
   _QiblahCompassState createState() => _QiblahCompassState();
 }
 
-class _QiblahCompassState extends State<QiblahCompass> {
+class _QiblahCompassState extends State<QiblahCompass>
+    with AutomaticKeepAliveClientMixin<QiblahCompass> {
   final _locationStreamController =
       StreamController<LocationStatus>.broadcast();
 
@@ -34,7 +35,11 @@ class _QiblahCompassState extends State<QiblahCompass> {
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context); // Ensure this is called to keep the state
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: StreamBuilder<LocationStatus>(
@@ -172,13 +177,13 @@ class _SpinningNeedleState extends State<SpinningNeedle>
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SizedBox(
-        height: 250,
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            return Stack(
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Stack(
               alignment: Alignment.center,
               children: [
                 Transform.rotate(
@@ -189,19 +194,22 @@ class _SpinningNeedleState extends State<SpinningNeedle>
                       Colors.white,
                       BlendMode.srcIn,
                     ),
+                    height: 250,
                   ),
                 ),
                 Transform.rotate(
                   angle: _controller.value * 2.0 * pi,
                   child: SvgPicture.asset(
                     'assets/needle.svg',
+                    height: 240,
                   ),
                 ),
               ],
-            );
-          },
-        ),
-      ),
+            ),
+            verticalBox(50),
+          ],
+        );
+      },
     );
   }
 }

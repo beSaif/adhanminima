@@ -8,7 +8,6 @@ import 'package:adhanminima/screens/home/components/panelWidget.dart';
 import 'package:adhanminima/screens/home/components/qiblaWidget.dart';
 import 'package:adhanminima/utils/sizedbox.dart';
 import 'package:adhanminima/utils/theme.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -32,16 +31,16 @@ class _HomeState extends State<Home> {
   String formattedDiff = "0";
   double lat = 0.0;
   double long = 0.0;
-  late Placemark place;
-  late PrayerTimes prayerTimes;
+  Placemark? place;
+  PrayerTimes? prayerTimes;
   Coordinates myCoordinates = Coordinates(0, 0);
 
-  late Future<PrayerTimes> _future;
+  late Future<void> _future;
 
   @override
   void initState() {
     super.initState();
-    _future = _getCoordinates();
+    _future = _initializeData();
     _pageController.addListener(() {
       int page = _pageController.page?.round() ?? 0;
       if (page != _currentPage) {
@@ -56,6 +55,16 @@ class _HomeState extends State<Home> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  Future<void> _initializeData() async {
+    Position position = await _getCoordinates();
+    lat = position.latitude;
+    long = position.longitude;
+
+    place = await _convertLocation(lat, long);
+    myCoordinates = Coordinates(lat, long);
+    await _getPrayerTimes();
   }
 
   @override
@@ -80,11 +89,8 @@ class _HomeState extends State<Home> {
               return _buildLoadingScreen();
             } else if (snapshot.hasError) {
               return _buildErrorScreen(snapshot.error);
-            } else if (snapshot.hasData) {
-              return _buildMainWidget(context, snapshot);
-              // return _buildLoadingScreen();
             } else {
-              return _buildErrorScreen("Unknown error");
+              return _buildMainWidget(context);
             }
           },
         ),
@@ -92,8 +98,7 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Column _buildMainWidget(
-      BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+  Column _buildMainWidget(BuildContext context) {
     return Column(
       children: [
         Expanded(
@@ -110,8 +115,8 @@ class _HomeState extends State<Home> {
               controller: _pageController,
               children: [
                 HomeWidget(
-                  prayerTimes: snapshot.data,
-                  place: place,
+                  prayerTimes: prayerTimes!,
+                  place: place!,
                 ),
                 const QiblahCompass(),
                 Container(), // Placeholder on the right side
@@ -123,7 +128,7 @@ class _HomeState extends State<Home> {
                   child: PanelWidget(
                     pageController: _pageController,
                     currentPage: _currentPage,
-                    prayerTimes: prayerTimes,
+                    prayerTimes: prayerTimes!,
                     panelController: panelController,
                   ),
                 ),
@@ -172,7 +177,7 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Future<Position> _determinePosition() async {
+  Future<Position> _getCoordinates() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       _showLocationDialog();
@@ -207,27 +212,16 @@ class _HomeState extends State<Home> {
     return placemarks[0];
   }
 
-  Future<PrayerTimes> _getCoordinates() async {
-    Position position = await _determinePosition();
-    lat = position.latitude;
-    long = position.longitude;
-    if (kDebugMode) {
-      lat = 12.4996;
-      long = 74.9869;
-    }
-    place = await _convertLocation(lat, long);
-    myCoordinates = Coordinates(lat, long);
+  Future<void> _getPrayerTimes() async {
     final params = CalculationMethod.karachi.getParameters()
       ..madhab = Madhab.shafi;
     prayerTimes = PrayerTimes.today(myCoordinates, params);
 
-    if (prayerTimes.nextPrayer().name == "none") {
+    if (prayerTimes?.nextPrayer().name == "none") {
       final now = DateTime.now();
       final tomorrow =
           DateComponents.from(DateTime(now.year, now.month, now.day + 1));
       prayerTimes = PrayerTimes(myCoordinates, tomorrow, params);
     }
-
-    return prayerTimes;
   }
 }
