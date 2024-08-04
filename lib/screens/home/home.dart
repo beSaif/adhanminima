@@ -61,9 +61,14 @@ class _HomeState extends State<Home> {
     Position position = await _getCoordinates();
     lat = position.latitude;
     long = position.longitude;
+    debugPrint('Latitude: $lat, Longitude: $long');
 
     place = await _convertLocation(lat, long);
+    debugPrint('Place: ${place!.name}');
+
     myCoordinates = Coordinates(lat, long);
+    debugPrint('Coordinates: $myCoordinates');
+
     await _getPrayerTimes();
   }
 
@@ -208,6 +213,7 @@ class _HomeState extends State<Home> {
   }
 
   Future<Placemark> _convertLocation(double lat, double long) async {
+    debugPrint('Converting location...');
     List<Placemark> placemarks = await placemarkFromCoordinates(lat, long);
     return placemarks[0];
   }
