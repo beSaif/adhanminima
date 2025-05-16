@@ -115,8 +115,11 @@ class _PanelWidgetState extends State<PanelWidget> {
                     ),
                     verticalBox(10),
                     //
-                    prayerTime(false, 'Sunrise',
-                        DateFormat.jm().format(prayerTimes.sunrise), nextPrayer),
+                    prayerTime(
+                        false,
+                        'Sunrise',
+                        DateFormat.jm().format(prayerTimes.sunrise),
+                        nextPrayer),
                     verticalBox(2),
                     const Divider(
                       color: Colors.white,
@@ -140,8 +143,11 @@ class _PanelWidgetState extends State<PanelWidget> {
                     verticalBox(10),
 
                     //
-                    prayerTime(false, 'Maghrib',
-                        DateFormat.jm().format(prayerTimes.maghrib), nextPrayer),
+                    prayerTime(
+                        false,
+                        'Maghrib',
+                        DateFormat.jm().format(prayerTimes.maghrib),
+                        nextPrayer),
                     verticalBox(2),
                     const Divider(
                       color: Colors.white,
