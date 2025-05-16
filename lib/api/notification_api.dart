@@ -19,9 +19,12 @@ class NotificationApi {
   static Future init({bool initScheduled = false}) async {
     const android = AndroidInitializationSettings('@drawable/ic_stat_ramadan');
     const settings = InitializationSettings(android: android);
-    await _notifications.initialize(settings, onSelectNotification: ((payload) {
-      onNotifications.add(payload);
-    }));
+    await _notifications.initialize(
+      settings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        onNotifications.add(response.payload);
+      },
+    );
 
     if (initScheduled) {
       tz.initializeTimeZones();

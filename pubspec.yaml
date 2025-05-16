@@ -17,7 +17,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_launcher_icons: ^0.9.2
-  flutter_local_notifications: ^9.4.0
+  flutter_local_notifications: ^17.2.1+2
   flutter_native_timezone_updated_gradle: ^2.0.3
   flutter_phoenix: ^1.0.0
   flutter_qiblah: ^3.0.3
