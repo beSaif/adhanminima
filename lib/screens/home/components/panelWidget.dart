@@ -101,85 +101,87 @@ class _PanelWidgetState extends State<PanelWidget> {
         ),
         buildDragHandle(),
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(45, 20, 45, 20),
-            child: (() {
-              return Column(
-                children: [
-                  prayerTime(false, 'Fajr',
-                      DateFormat.jm().format(prayerTimes.fajr), nextPrayer),
-                  verticalBox(2),
-                  const Divider(
-                    color: Colors.white,
-                  ),
-                  verticalBox(10),
-                  //
-                  prayerTime(false, 'Sunrise',
-                      DateFormat.jm().format(prayerTimes.sunrise), nextPrayer),
-                  verticalBox(2),
-                  const Divider(
-                    color: Colors.white,
-                  ),
-                  verticalBox(10),
-                  //
-                  prayerTime(false, 'Duhr',
-                      DateFormat.jm().format(prayerTimes.dhuhr), nextPrayer),
-                  verticalBox(2),
-                  const Divider(
-                    color: Colors.white,
-                  ),
-                  verticalBox(10),
-                  //
-                  prayerTime(false, 'Asr',
-                      DateFormat.jm().format(prayerTimes.asr), nextPrayer),
-                  verticalBox(2),
-                  const Divider(
-                    color: Colors.white,
-                  ),
-                  verticalBox(10),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(45, 20, 45, 20),
+              child: (() {
+                return Column(
+                  children: [
+                    prayerTime(false, 'Fajr',
+                        DateFormat.jm().format(prayerTimes.fajr), nextPrayer),
+                    verticalBox(2),
+                    const Divider(
+                      color: Colors.white,
+                    ),
+                    verticalBox(10),
+                    //
+                    prayerTime(false, 'Sunrise',
+                        DateFormat.jm().format(prayerTimes.sunrise), nextPrayer),
+                    verticalBox(2),
+                    const Divider(
+                      color: Colors.white,
+                    ),
+                    verticalBox(10),
+                    //
+                    prayerTime(false, 'Duhr',
+                        DateFormat.jm().format(prayerTimes.dhuhr), nextPrayer),
+                    verticalBox(2),
+                    const Divider(
+                      color: Colors.white,
+                    ),
+                    verticalBox(10),
+                    //
+                    prayerTime(false, 'Asr',
+                        DateFormat.jm().format(prayerTimes.asr), nextPrayer),
+                    verticalBox(2),
+                    const Divider(
+                      color: Colors.white,
+                    ),
+                    verticalBox(10),
 
-                  //
-                  prayerTime(false, 'Maghrib',
-                      DateFormat.jm().format(prayerTimes.maghrib), nextPrayer),
-                  verticalBox(2),
-                  const Divider(
-                    color: Colors.white,
-                  ),
-                  verticalBox(10),
-                  //
-                  prayerTime(false, 'Isha',
-                      DateFormat.jm().format(prayerTimes.isha), nextPrayer),
-                  verticalBox(2),
-                  const Divider(
-                    color: Colors.white,
-                  ),
-                  verticalBox(10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        'developed by ',
-                        style: cusTextStyle(12, FontWeight.w400),
-                      ),
-                      GestureDetector(
-                        onTap: () async {
-                          //print("Launching @be.saif insta");
-                          const String urlString =
-                              'https://www.instagram.com/be.saif/';
-                          Uri url = Uri.parse(urlString);
-                          if (await canLaunchUrl(url)) {
-                            await launchUrl(url);
-                          }
-                        },
-                        child: Text('be.Saif',
-                            style: cusTextStyle(15, FontWeight.w700)),
-                      ),
-                    ],
-                  )
-                ],
-              );
-            }()),
+                    //
+                    prayerTime(false, 'Maghrib',
+                        DateFormat.jm().format(prayerTimes.maghrib), nextPrayer),
+                    verticalBox(2),
+                    const Divider(
+                      color: Colors.white,
+                    ),
+                    verticalBox(10),
+                    //
+                    prayerTime(false, 'Isha',
+                        DateFormat.jm().format(prayerTimes.isha), nextPrayer),
+                    verticalBox(2),
+                    const Divider(
+                      color: Colors.white,
+                    ),
+                    verticalBox(10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          'developed by ',
+                          style: cusTextStyle(12, FontWeight.w400),
+                        ),
+                        GestureDetector(
+                          onTap: () async {
+                            //print("Launching @be.saif insta");
+                            const String urlString =
+                                'https://www.instagram.com/be.saif/';
+                            Uri url = Uri.parse(urlString);
+                            if (await canLaunchUrl(url)) {
+                              await launchUrl(url);
+                            }
+                          },
+                          child: Text('be.Saif',
+                              style: cusTextStyle(15, FontWeight.w700)),
+                        ),
+                      ],
+                    )
+                  ],
+                );
+              }()),
+            ),
           ),
         )
       ],
@@ -247,7 +249,23 @@ class _PanelWidgetState extends State<PanelWidget> {
         ),
         Row(
           children: [
-            Text(time, style: cusTextStyle(24, FontWeight.w300)),
+            Text(time,
+                style: TextStyle(
+                  fontFamily: 'Halenoir',
+                  color: (() {
+                    if (nextPrayer[0] == prayer[0]) {
+                      return Colors.white;
+                    }
+                    return Colors.white70;
+                  }()),
+                  fontSize: 24,
+                  fontWeight: (() {
+                    if (nextPrayer[0] == prayer[0]) {
+                      return FontWeight.w900;
+                    }
+                    return FontWeight.w300;
+                  }()),
+                )),
             horizontalBox(10),
           ],
         )
