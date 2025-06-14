@@ -407,7 +407,7 @@ class _PanelWidgetState extends State<PanelWidget> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Set offset for all prayers',
+                        'Set Offsets',
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.95),
                           fontWeight: FontWeight.bold,
