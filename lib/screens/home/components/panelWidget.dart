@@ -29,7 +29,8 @@ class PanelWidget extends StatefulWidget {
   State<PanelWidget> createState() => _PanelWidgetState();
 }
 
-class _PanelWidgetState extends State<PanelWidget> {
+class _PanelWidgetState extends State<PanelWidget>
+    with SingleTickerProviderStateMixin {
   final List<String> dotIndicatorIcons = [
     'assets/prayer_time_icon.png',
     'assets/qibla_icon.png',
@@ -47,13 +48,34 @@ class _PanelWidgetState extends State<PanelWidget> {
     'Isha': 0,
   };
 
+  late AnimationController _iconAnimController;
+  late Animation<double> _iconScale;
+  late final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     _loadPrayerOffsets();
+    _iconAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 120),
+      lowerBound: 0.9,
+      upperBound: 1.0,
+    );
+    _iconScale = CurvedAnimation(
+      parent: _iconAnimController,
+      curve: Curves.easeInOut,
+    );
     // NotificationApi.init(initScheduled: true);
     // listenNotifications();
     //setNotification(prayerTimes);
+  }
+
+  @override
+  void dispose() {
+    _iconAnimController.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadPrayerOffsets() async {
@@ -120,6 +142,14 @@ class _PanelWidgetState extends State<PanelWidget> {
     return DateFormat.jm().format(time.add(Duration(minutes: offset)));
   }
 
+  void _updateDragIcon(bool isOpen) {
+    setState(() {
+      dragIcon = isOpen
+          ? Icons.keyboard_arrow_down_outlined
+          : Icons.keyboard_arrow_up_outlined;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     String nextPrayer = prayerTimes.nextPrayer().name[0].toUpperCase() +
@@ -138,6 +168,7 @@ class _PanelWidgetState extends State<PanelWidget> {
         buildDragHandle(),
         Expanded(
           child: SingleChildScrollView(
+            controller: _scrollController,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(45, 20, 45, 20),
               child: (() {
@@ -237,31 +268,43 @@ class _PanelWidgetState extends State<PanelWidget> {
     );
   }
 
-  togglePanel() async {
+  Future<void> togglePanel() async {
     if (widget.panelController.isPanelOpen) {
+      // Scroll to top (Fajr) when panel is closed
+      _scrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
       await widget.panelController.close();
-
-      setState(() {
-        dragIcon = Icons.keyboard_arrow_up_outlined;
-      });
+      _updateDragIcon(false);
     } else {
       await widget.panelController.open();
-
-      setState(() {
-        dragIcon = Icons.keyboard_arrow_down_outlined;
-      });
+      _updateDragIcon(true);
     }
   }
 
   Widget buildDragHandle() => GestureDetector(
         onTap: () async {
+          // Animation feedback
+          await _iconAnimController.reverse();
+          await _iconAnimController.forward();
+          // Haptic feedback
+          // ignore: use_build_context_synchronously
+          Feedback.forTap(context);
           await togglePanel();
         },
         child: Center(
-          child: Icon(
-            dragIcon,
-            color: Colors.white,
-            size: 55,
+          child: ScaleTransition(
+            scale: _iconScale,
+            child: Icon(
+              dragIcon,
+              color: Colors.white,
+              size: 55,
+              semanticLabel: widget.panelController.isPanelOpen
+                  ? 'Close panel'
+                  : 'Open panel',
+            ),
           ),
         ),
       );
@@ -273,11 +316,11 @@ class _PanelWidgetState extends State<PanelWidget> {
       children: [
         Row(
           children: [
-            const Icon(
-              Icons.notifications_sharp,
-              color: Colors.white70,
-            ),
-            horizontalBox(20),
+            // const Icon(
+            //   Icons.notifications_sharp,
+            //   color: Colors.white70,
+            // ),
+            // horizontalBox(20),
             Text(prayer,
                 style: TextStyle(
                     fontFamily: 'Halenoir',
