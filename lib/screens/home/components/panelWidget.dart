@@ -388,7 +388,7 @@ class _PanelWidgetState extends State<PanelWidget> {
                 BoxShadow(
                   color: Colors.black.withOpacity(0.2),
                   blurRadius: 24,
-                  offset: Offset(0, 8),
+                  offset: const Offset(0, 8),
                 ),
               ],
               border: Border.all(
@@ -415,7 +415,7 @@ class _PanelWidgetState extends State<PanelWidget> {
                           letterSpacing: 0.5,
                         ),
                       ),
-                      SizedBox(height: 18),
+                      const SizedBox(height: 18),
                       StatefulBuilder(
                         builder: (context, setStateDialog) {
                           return Column(
@@ -433,9 +433,9 @@ class _PanelWidgetState extends State<PanelWidget> {
                                                         .withOpacity(0.9),
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: 16))),
-                                        Spacer(),
+                                        const Spacer(),
                                         IconButton(
-                                          icon: Icon(
+                                          icon: const Icon(
                                               Icons.remove_circle_outline,
                                               color: Colors.white70),
                                           onPressed: () {
@@ -451,7 +451,7 @@ class _PanelWidgetState extends State<PanelWidget> {
                                           alignment: Alignment.center,
                                           child: Text(
                                             tempOffsets[prayer].toString(),
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               color: Colors.white,
                                               fontSize: 16,
                                               fontWeight: FontWeight.w600,
@@ -459,7 +459,8 @@ class _PanelWidgetState extends State<PanelWidget> {
                                           ),
                                         ),
                                         IconButton(
-                                          icon: Icon(Icons.add_circle_outline,
+                                          icon: const Icon(
+                                              Icons.add_circle_outline,
                                               color: Colors.white70),
                                           onPressed: () {
                                             setStateDialog(() {
@@ -476,7 +477,7 @@ class _PanelWidgetState extends State<PanelWidget> {
                           );
                         },
                       ),
-                      SizedBox(height: 18),
+                      const SizedBox(height: 18),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -485,9 +486,9 @@ class _PanelWidgetState extends State<PanelWidget> {
                               foregroundColor: Colors.white.withOpacity(0.8),
                             ),
                             onPressed: () => Navigator.of(context).pop(),
-                            child: Text('Cancel'),
+                            child: const Text('Cancel'),
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white.withOpacity(0.18),
@@ -504,7 +505,7 @@ class _PanelWidgetState extends State<PanelWidget> {
                               await _savePrayerOffsets();
                               Navigator.of(context).pop();
                             },
-                            child: Text('Save'),
+                            child: const Text('Save'),
                           ),
                         ],
                       )
