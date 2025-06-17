@@ -90,7 +90,7 @@ class _HomeState extends State<Home> {
         child: FutureBuilder(
           future: _future,
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+            if (snapshot.connectionState != ConnectionState.waiting) {
               return _buildLoadingScreen();
             } else if (snapshot.hasError) {
               return _buildErrorScreen(snapshot.error);
@@ -124,7 +124,6 @@ class _HomeState extends State<Home> {
                   place: place!,
                 ),
                 const QiblahCompass(),
-                Container(), // Placeholder on the right side
               ],
             ),
             panel: Column(
@@ -149,7 +148,7 @@ class _HomeState extends State<Home> {
     final int random = 0 + Random().nextInt(49 - 0);
     Quran verseOfTheDay = quranicVerses[random];
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 36.0, vertical: 8.0),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

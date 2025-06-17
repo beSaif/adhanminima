@@ -1,7 +1,7 @@
 // ignore_for_file: file_names
 
 import 'dart:async';
-import 'dart:math' show pi;
+import 'dart:math' show pi, sin, cos;
 
 import 'package:adhanminima/utils/theme.dart';
 import 'package:flutter/material.dart';
@@ -99,18 +99,36 @@ class _QiblahCompassWidgetState extends State<QiblahCompassWidget> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Transform.rotate(
-                    angle: -qiblahOffset * (pi / 180),
-                    child: Icon(
-                      Icons.arrow_upward_rounded,
-                      size: 160,
-                      color: aligned ? arrowGreen : arrowGray,
-                      shadows: aligned
-                          ? [const Shadow(color: arrowGreen, blurRadius: 16)]
-                          : null,
+                  SizedBox(
+                    width: 220,
+                    height: 220,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Dot on circular path
+                        _QiblaDot(
+                          qiblaOffset: -qiblahOffset,
+                          // 90% width of the screen
+                          radius: MediaQuery.of(context).size.width * 0.45,
+                          aligned: aligned,
+                        ),
+                        Transform.rotate(
+                          angle: -qiblahOffset * (pi / 180),
+                          child: Icon(
+                            Icons.arrow_upward_rounded,
+                            size: 160,
+                            color: aligned ? arrowGreen : arrowGray,
+                            shadows: aligned
+                                ? [
+                                    const Shadow(
+                                        color: Colors.black, blurRadius: 16)
+                                  ]
+                                : null,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 32),
                   AnimatedSwitcher(
                     key: ValueKey(aligned),
                     duration: const Duration(milliseconds: 300),
@@ -134,6 +152,7 @@ class _QiblahCompassWidgetState extends State<QiblahCompassWidget> {
                             style: cusTextStyle(
                               28,
                               FontWeight.w500,
+                              arrowGray,
                             ),
                           ),
                   ),
@@ -361,6 +380,44 @@ class _PulseCalibrationPromptState extends State<_PulseCalibrationPrompt>
           ),
         );
       },
+    );
+  }
+}
+
+// Dot widget (stateless, instant update)
+class _QiblaDot extends StatelessWidget {
+  final double qiblaOffset; // in degrees
+  final double radius;
+  final bool aligned;
+  const _QiblaDot(
+      {required this.qiblaOffset, required this.radius, required this.aligned});
+
+  @override
+  Widget build(BuildContext context) {
+    final double angleRad = (qiblaOffset) * (pi / 180);
+    final double dx = radius * -sin(angleRad);
+    final double dy = radius * -cos(angleRad);
+    return Transform.translate(
+      offset: Offset(dx, dy),
+      child: Container(
+        width: 22,
+        height: 22,
+        decoration: BoxDecoration(
+          color: Colors.black,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.5),
+              blurRadius: 12,
+              spreadRadius: 3,
+            ),
+          ],
+          border: Border.all(
+            color: aligned ? const Color(0xFF21C262) : Colors.white,
+            width: 3,
+          ),
+        ),
+      ),
     );
   }
 }
