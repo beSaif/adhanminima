@@ -90,7 +90,7 @@ class _HomeState extends State<Home> {
         child: FutureBuilder(
           future: _future,
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-            if (snapshot.connectionState != ConnectionState.waiting) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
               return _buildLoadingScreen();
             } else if (snapshot.hasError) {
               return _buildErrorScreen(snapshot.error);
