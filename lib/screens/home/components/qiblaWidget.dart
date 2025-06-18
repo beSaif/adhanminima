@@ -41,11 +41,12 @@ class QiblahCompassWidget extends StatefulWidget {
 }
 
 class _QiblahCompassWidgetState extends State<QiblahCompassWidget> {
-  static const double alignmentThreshold = 3.0; // degrees, fixed for production
+  static const double alignmentThreshold = 4.0; // degrees, fixed for production
   bool wasAligned = false;
   double? qiblaBearing;
   String? locationError;
   bool _isLoading = false;
+  bool _calibrationSheetShown = false;
 
   @override
   void initState() {
@@ -61,11 +62,17 @@ class _QiblahCompassWidgetState extends State<QiblahCompassWidget> {
     try {
       Position? pos = await Geolocator.getLastKnownPosition();
       if (pos == null) {
+        debugPrint(
+            'No last known position found, requesting current position...');
         pos = await Geolocator.getCurrentPosition();
       } else {
+        debugPrint(
+            'Using last known position: ${pos.latitude}, ${pos.longitude}');
         // Update with current position in background
         Geolocator.getCurrentPosition().then((freshPos) {
           if (mounted) {
+            debugPrint(
+                'Updated position in background: ${freshPos.latitude}, ${freshPos.longitude}');
             final bearing = calculateQiblaBearing(
                 freshPos.latitude, freshPos.longitude, 21.4225, 39.8262);
             setState(() {
@@ -90,6 +97,128 @@ class _QiblahCompassWidgetState extends State<QiblahCompassWidget> {
         _isLoading = false;
       });
     }
+  }
+
+  void _showCalibrationSheet() {
+    if (_calibrationSheetShown) return;
+    _calibrationSheetShown = true;
+    showModalBottomSheet(
+      context: context,
+      isDismissible: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.2),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      builder: (context) {
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.18),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(32)),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(18),
+                    child: const Icon(
+                      Icons.compass_calibration,
+                      size: 48,
+                      color: Colors.orange,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Compass needs calibration',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black26,
+                          blurRadius: 8,
+                        ),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Move your phone in a figure-8 motion to calibrate the compass.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black26,
+                          blurRadius: 8,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.7),
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 14),
+                    ),
+                    child: const Text(
+                      "Dismiss",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      setState(() {
+                        _calibrationSheetShown = false;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    ).whenComplete(() {
+      if (mounted) {
+        setState(() {
+          _calibrationSheetShown = false;
+        });
+      }
+    });
   }
 
   @override
@@ -126,7 +255,14 @@ class _QiblahCompassWidgetState extends State<QiblahCompassWidget> {
         }
         wasAligned = aligned;
         final bool needsCalibration =
-            event.accuracy != null && event.accuracy! <= 1;
+            event.accuracy != null && event.accuracy! < 30.0;
+        debugPrint('Accuracy: ${event.accuracy}, '
+            'needs calibration: $needsCalibration');
+        if (needsCalibration && !_calibrationSheetShown) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _showCalibrationSheet();
+          });
+        }
         return Stack(
           children: [
             // Main compass UI
@@ -142,7 +278,7 @@ class _QiblahCompassWidgetState extends State<QiblahCompassWidget> {
                       children: [
                         // Dot on circular path (moves according to qiblaOffset)
                         _QiblaDot(
-                          qiblaOffset: -qiblahOffset,
+                          qiblaOffset: qiblahOffset,
                           // 90% width of the screen
                           radius: MediaQuery.of(context).size.width * 0.45,
                           aligned: aligned,
@@ -194,13 +330,7 @@ class _QiblahCompassWidgetState extends State<QiblahCompassWidget> {
                 ],
               ),
             ),
-            if (needsCalibration)
-              Positioned(
-                top: 56,
-                left: 0,
-                right: 0,
-                child: _PulseCalibrationPrompt(),
-              ),
+            // if (needsCalibration)
           ],
         );
       },
@@ -371,108 +501,6 @@ class LocationErrorWidget extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _PulseCalibrationPrompt extends StatefulWidget {
-  @override
-  State<_PulseCalibrationPrompt> createState() =>
-      _PulseCalibrationPromptState();
-}
-
-class _PulseCalibrationPromptState extends State<_PulseCalibrationPrompt>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  bool _visible = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
-    )..repeat(reverse: false);
-    Future.delayed(const Duration(seconds: 5), () {
-      if (mounted) {
-        setState(() {
-          _visible = false;
-          _controller.stop();
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!_visible) return const SizedBox.shrink();
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        final double bgScale = 1.0 + 0.4 * _controller.value;
-        final double bgOpacity = 1.0 - _controller.value;
-        final double iconScale = 1.0 + 0.2 * _controller.value;
-        final double iconOpacity = 0.7 + 0.3 * (1.0 - _controller.value);
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            children: [
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  Opacity(
-                    opacity: bgOpacity,
-                    child: Transform.scale(
-                      scale: bgScale,
-                      child: Container(
-                        width: 70,
-                        height: 70,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.orange.withOpacity(0.3),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Transform.scale(
-                    scale: iconScale,
-                    child: Opacity(
-                      opacity: iconOpacity,
-                      child: Icon(
-                        Icons.screen_rotation,
-                        color: Colors.orange.shade200,
-                        size: 32,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Flexible(
-                    child: Text(
-                      'Compass accuracy is low. Please calibrate by moving your phone in a figure-8 motion.',
-                      style: TextStyle(
-                        color: Colors.orange,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }
