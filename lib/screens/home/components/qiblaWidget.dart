@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:math' show pi, sin, cos;
+import 'dart:ui';
 
 import 'package:adhanminima/utils/theme.dart';
 import 'package:flutter/material.dart';
@@ -43,6 +44,8 @@ class _QiblahCompassWidgetState extends State<QiblahCompassWidget> {
   static const double alignmentThreshold = 3.0; // degrees, fixed for production
   bool wasAligned = false;
   double? qiblaBearing;
+  String? locationError;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -51,8 +54,26 @@ class _QiblahCompassWidgetState extends State<QiblahCompassWidget> {
   }
 
   Future<void> _getLocationAndQibla() async {
+    setState(() {
+      _isLoading = true;
+      locationError = null;
+    });
     try {
-      final pos = await Geolocator.getCurrentPosition();
+      Position? pos = await Geolocator.getLastKnownPosition();
+      if (pos == null) {
+        pos = await Geolocator.getCurrentPosition();
+      } else {
+        // Update with current position in background
+        Geolocator.getCurrentPosition().then((freshPos) {
+          if (mounted) {
+            final bearing = calculateQiblaBearing(
+                freshPos.latitude, freshPos.longitude, 21.4225, 39.8262);
+            setState(() {
+              qiblaBearing = bearing;
+            });
+          }
+        });
+      }
       // Kaaba coordinates
       const double kaabaLat = 21.4225;
       const double kaabaLon = 39.8262;
@@ -60,9 +81,14 @@ class _QiblahCompassWidgetState extends State<QiblahCompassWidget> {
           pos.latitude, pos.longitude, kaabaLat, kaabaLon);
       setState(() {
         qiblaBearing = bearing;
+        _isLoading = false;
       });
     } catch (e) {
-      // handle error
+      setState(() {
+        locationError =
+            'Location unavailable. Please enable location and retry.';
+        _isLoading = false;
+      });
     }
   }
 
@@ -71,6 +97,15 @@ class _QiblahCompassWidgetState extends State<QiblahCompassWidget> {
     // Always use high contrast colors
     const Color arrowGray = Colors.white;
     const Color arrowGreen = Color(0xFF21C262); // Modern emerald green
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (locationError != null) {
+      return LocationErrorWidget(
+        error: locationError!,
+        callback: _getLocationAndQibla,
+      );
+    }
     if (qiblaBearing == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -105,26 +140,24 @@ class _QiblahCompassWidgetState extends State<QiblahCompassWidget> {
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        // Dot on circular path
+                        // Dot on circular path (moves according to qiblaOffset)
                         _QiblaDot(
                           qiblaOffset: -qiblahOffset,
                           // 90% width of the screen
                           radius: MediaQuery.of(context).size.width * 0.45,
                           aligned: aligned,
                         ),
-                        Transform.rotate(
-                          angle: -qiblahOffset * (pi / 180),
-                          child: Icon(
-                            Icons.arrow_upward_rounded,
-                            size: 160,
-                            color: aligned ? arrowGreen : arrowGray,
-                            shadows: aligned
-                                ? [
-                                    const Shadow(
-                                        color: Colors.black, blurRadius: 16)
-                                  ]
-                                : null,
-                          ),
+                        // Arrow always points up (no rotation)
+                        Icon(
+                          Icons.arrow_upward_rounded,
+                          size: 160,
+                          color: aligned ? arrowGreen : arrowGray,
+                          shadows: aligned
+                              ? [
+                                  const Shadow(
+                                      color: Colors.black, blurRadius: 16)
+                                ]
+                              : null,
                         ),
                       ],
                     ),
@@ -254,29 +287,89 @@ class LocationErrorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const errorColor = Color(0xffb00020);
-
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Icons.location_off,
-            size: 150,
-            color: errorColor,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(32),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.7,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.18),
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(18),
+                    child: const Icon(
+                      Icons.location_off,
+                      size: 64,
+                      // color: Color(0xffb00020),
+                      color: Color(0xffb00020),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    error,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black26,
+                          blurRadius: 8,
+                        ),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 28),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.7),
+                      foregroundColor: const Color(0xffb00020),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 14),
+                    ),
+                    child: const Text(
+                      "Retry",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    onPressed: callback,
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 32),
-          Text(
-            error,
-            style:
-                const TextStyle(color: errorColor, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton(
-            child: const Text("Retry"),
-            onPressed: callback,
-          ),
-        ],
+        ),
       ),
     );
   }
