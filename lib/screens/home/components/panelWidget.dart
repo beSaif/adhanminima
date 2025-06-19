@@ -136,7 +136,7 @@ class _PanelWidgetState extends State<PanelWidget>
               opacity: widget.panelController.isPanelOpen ? 0 : 1,
               duration: const Duration(milliseconds: 300),
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.only(bottom: 0),
                 child: _buildDotIndicators(),
               ),
             ),
