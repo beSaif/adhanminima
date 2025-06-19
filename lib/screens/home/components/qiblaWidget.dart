@@ -255,7 +255,7 @@ class _QiblahCompassWidgetState extends State<QiblahCompassWidget> {
         }
         wasAligned = aligned;
         final bool needsCalibration =
-            event.accuracy != null && event.accuracy! < 30.0;
+            event.accuracy != null && event.accuracy! > 30.0;
         debugPrint('Accuracy: ${event.accuracy}, '
             'needs calibration: $needsCalibration');
         if (needsCalibration && !_calibrationSheetShown) {

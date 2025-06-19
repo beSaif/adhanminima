@@ -8,10 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:get/get.dart';
+import 'package:adhanminima/controllers/prayer_offset_controller.dart';
 
 class PanelWidget extends StatefulWidget {
-  // final PanelController panelController;
   PrayerTimes prayerTimes;
   PageController pageController;
   PanelController panelController;
@@ -38,15 +38,7 @@ class _PanelWidgetState extends State<PanelWidget>
   late PrayerTimes prayerTimes = widget.prayerTimes;
   var dragIcon = Icons.keyboard_arrow_up_outlined;
 
-  // Store offsets for each prayer in minutes
-  Map<String, int> prayerOffsets = {
-    'Fajr': 0,
-    'Sunrise': 0,
-    'Duhr': 0,
-    'Asr': 0,
-    'Maghrib': 0,
-    'Isha': 0,
-  };
+  final PrayerOffsetController offsetController = Get.find();
 
   late AnimationController _iconAnimController;
   late Animation<double> _iconScale;
@@ -55,7 +47,6 @@ class _PanelWidgetState extends State<PanelWidget>
   @override
   void initState() {
     super.initState();
-    _loadPrayerOffsets();
     _iconAnimController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 120),
@@ -76,24 +67,6 @@ class _PanelWidgetState extends State<PanelWidget>
     _iconAnimController.dispose();
     _scrollController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadPrayerOffsets() async {
-    final prefs = await SharedPreferences.getInstance();
-    Map<String, int> loadedOffsets = {};
-    for (var key in prayerOffsets.keys) {
-      loadedOffsets[key] = prefs.getInt('prayerOffset_$key') ?? 0;
-    }
-    setState(() {
-      prayerOffsets = loadedOffsets;
-    });
-  }
-
-  Future<void> _savePrayerOffsets() async {
-    final prefs = await SharedPreferences.getInstance();
-    for (var entry in prayerOffsets.entries) {
-      await prefs.setInt('prayerOffset_${entry.key}', entry.value);
-    }
   }
 
   void listenNotifications() {
@@ -137,8 +110,8 @@ class _PanelWidgetState extends State<PanelWidget>
   }
 
   // Helper to get offset time
-  String getOffsetTime(DateTime time, String prayer) {
-    int offset = prayerOffsets[prayer] ?? 0;
+  String getOffsetTime(DateTime time, Prayer prayer) {
+    int offset = offsetController.prayerOffsets[prayer] ?? 0;
     return DateFormat.jm().format(time.add(Duration(minutes: offset)));
   }
 
@@ -155,116 +128,131 @@ class _PanelWidgetState extends State<PanelWidget>
     String nextPrayer = prayerTimes.nextPrayer().name[0].toUpperCase() +
         prayerTimes.nextPrayer().name.substring(1);
 
-    return Column(
-      children: [
-        AnimatedOpacity(
-          opacity: widget.panelController.isPanelOpen ? 0 : 1,
-          duration: const Duration(milliseconds: 300),
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _buildDotIndicators(),
-          ),
-        ),
-        buildDragHandle(),
-        Expanded(
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(45, 20, 45, 20),
-              child: (() {
-                return Column(
-                  children: [
-                    prayerTime(false, 'Fajr',
-                        DateFormat.jm().format(prayerTimes.fajr), nextPrayer),
-                    verticalBox(2),
-                    const Divider(
-                      color: Colors.white,
-                    ),
-                    verticalBox(10),
-                    //
-                    prayerTime(
-                        false,
-                        'Sunrise',
-                        DateFormat.jm().format(prayerTimes.sunrise),
-                        nextPrayer),
-                    verticalBox(2),
-                    const Divider(
-                      color: Colors.white,
-                    ),
-                    verticalBox(10),
-                    //
-                    prayerTime(false, 'Duhr',
-                        DateFormat.jm().format(prayerTimes.dhuhr), nextPrayer),
-                    verticalBox(2),
-                    const Divider(
-                      color: Colors.white,
-                    ),
-                    verticalBox(10),
-                    //
-                    prayerTime(false, 'Asr',
-                        DateFormat.jm().format(prayerTimes.asr), nextPrayer),
-                    verticalBox(2),
-                    const Divider(
-                      color: Colors.white,
-                    ),
-                    verticalBox(10),
-
-                    //
-                    prayerTime(
-                        false,
-                        'Maghrib',
-                        DateFormat.jm().format(prayerTimes.maghrib),
-                        nextPrayer),
-                    verticalBox(2),
-                    const Divider(
-                      color: Colors.white,
-                    ),
-                    verticalBox(10),
-                    //
-                    prayerTime(false, 'Isha',
-                        DateFormat.jm().format(prayerTimes.isha), nextPrayer),
-                    verticalBox(2),
-                    const Divider(
-                      color: Colors.white,
-                    ),
-                    verticalBox(10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          'developed by ',
-                          style: cusTextStyle(12, FontWeight.w400),
-                        ),
-                        GestureDetector(
-                          onTap: () async {
-                            //print("Launching @be.saif insta");
-                            const String urlString =
-                                'https://www.instagram.com/be.saif/';
-                            Uri url = Uri.parse(urlString);
-                            if (await canLaunchUrl(url)) {
-                              await launchUrl(url);
-                            }
-                          },
-                          child: Text('be.Saif',
-                              style: cusTextStyle(15, FontWeight.w700)),
-                        ),
-                        // Center the edit icon vertically with the text
-                        IconButton(
-                          icon: const Icon(Icons.edit,
-                              color: Colors.white54, size: 20),
-                          tooltip: 'Offset prayer times',
-                          onPressed: () => showOffsetDialogAll(),
-                        ),
-                      ],
-                    )
-                  ],
-                );
-              }()),
+    return GetBuilder<PrayerOffsetController>(
+      builder: (_) {
+        return Column(
+          children: [
+            AnimatedOpacity(
+              opacity: widget.panelController.isPanelOpen ? 0 : 1,
+              duration: const Duration(milliseconds: 300),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _buildDotIndicators(),
+              ),
             ),
-          ),
-        )
-      ],
+            buildDragHandle(),
+            Expanded(
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(45, 20, 45, 20),
+                  child: (() {
+                    return Column(
+                      children: [
+                        prayerTime(
+                            false,
+                            'Fajr',
+                            DateFormat.jm().format(prayerTimes.fajr),
+                            nextPrayer),
+                        verticalBox(2),
+                        const Divider(
+                          color: Colors.white,
+                        ),
+                        verticalBox(10),
+                        //
+                        prayerTime(
+                            false,
+                            'Sunrise',
+                            DateFormat.jm().format(prayerTimes.sunrise),
+                            nextPrayer),
+                        verticalBox(2),
+                        const Divider(
+                          color: Colors.white,
+                        ),
+                        verticalBox(10),
+                        //
+                        prayerTime(
+                            false,
+                            'Duhr',
+                            DateFormat.jm().format(prayerTimes.dhuhr),
+                            nextPrayer),
+                        verticalBox(2),
+                        const Divider(
+                          color: Colors.white,
+                        ),
+                        verticalBox(10),
+                        //
+                        prayerTime(
+                            false,
+                            'Asr',
+                            DateFormat.jm().format(prayerTimes.asr),
+                            nextPrayer),
+                        verticalBox(2),
+                        const Divider(
+                          color: Colors.white,
+                        ),
+                        verticalBox(10),
+                        //
+                        prayerTime(
+                            false,
+                            'Maghrib',
+                            DateFormat.jm().format(prayerTimes.maghrib),
+                            nextPrayer),
+                        verticalBox(2),
+                        const Divider(
+                          color: Colors.white,
+                        ),
+                        verticalBox(10),
+                        //
+                        prayerTime(
+                            false,
+                            'Isha',
+                            DateFormat.jm().format(prayerTimes.isha),
+                            nextPrayer),
+                        verticalBox(2),
+                        const Divider(
+                          color: Colors.white,
+                        ),
+                        verticalBox(10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              'developed by ',
+                              style: cusTextStyle(12, FontWeight.w400),
+                            ),
+                            GestureDetector(
+                              onTap: () async {
+                                //print("Launching @be.saif insta");
+                                const String urlString =
+                                    'https://www.instagram.com/be.saif/';
+                                Uri url = Uri.parse(urlString);
+                                if (await canLaunchUrl(url)) {
+                                  await launchUrl(url);
+                                }
+                              },
+                              child: Text('be.Saif',
+                                  style: cusTextStyle(15, FontWeight.w700)),
+                            ),
+                            // Center the edit icon vertically with the text
+                            IconButton(
+                              icon: const Icon(Icons.edit,
+                                  color: Colors.white54, size: 20),
+                              tooltip: 'Offset prayer times',
+                              onPressed: () => showOffsetDialogAll(),
+                            ),
+                          ],
+                        )
+                      ],
+                    );
+                  }()),
+                ),
+              ),
+            )
+          ],
+        );
+      },
     );
   }
 
@@ -309,30 +297,26 @@ class _PanelWidgetState extends State<PanelWidget>
         ),
       );
 
-  Widget prayerTime(alarm, prayer, time, nextPrayer) {
-    //print("prayer: $prayer, nextPrayer: $nextPrayer");
+  Widget prayerTime(alarm, String prayerName, time, nextPrayer) {
+    // Map string name to Prayer enum
+    final prayerEnum = _prayerNameToEnum(prayerName);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
           children: [
-            // const Icon(
-            //   Icons.notifications_sharp,
-            //   color: Colors.white70,
-            // ),
-            // horizontalBox(20),
-            Text(prayer,
+            Text(prayerName,
                 style: TextStyle(
                     fontFamily: 'Halenoir',
                     color: (() {
-                      if (nextPrayer[0] == prayer[0]) {
+                      if (nextPrayer[0] == prayerName[0]) {
                         return Colors.white;
                       }
                       return Colors.white70;
                     }()),
                     fontSize: 24,
                     fontWeight: (() {
-                      if (nextPrayer[0] == prayer[0]) {
+                      if (nextPrayer[0] == prayerName[0]) {
                         return FontWeight.w900;
                       }
                       return FontWeight.w400;
@@ -342,18 +326,18 @@ class _PanelWidgetState extends State<PanelWidget>
         Row(
           children: [
             // Use offset time
-            Text(getOffsetTime(_getPrayerTime(prayer), prayer),
+            Text(getOffsetTime(_getPrayerTime(prayerName), prayerEnum),
                 style: TextStyle(
                   fontFamily: 'Halenoir',
                   color: (() {
-                    if (nextPrayer[0] == prayer[0]) {
+                    if (nextPrayer[0] == prayerName[0]) {
                       return Colors.white;
                     }
                     return Colors.white70;
                   }()),
                   fontSize: 24,
                   fontWeight: (() {
-                    if (nextPrayer[0] == prayer[0]) {
+                    if (nextPrayer[0] == prayerName[0]) {
                       return FontWeight.w900;
                     }
                     return FontWeight.w300;
@@ -364,6 +348,26 @@ class _PanelWidgetState extends State<PanelWidget>
         )
       ],
     );
+  }
+
+  // Helper to map string to Prayer enum
+  Prayer _prayerNameToEnum(String name) {
+    switch (name) {
+      case 'Fajr':
+        return Prayer.fajr;
+      case 'Sunrise':
+        return Prayer.sunrise;
+      case 'Duhr':
+        return Prayer.dhuhr;
+      case 'Asr':
+        return Prayer.asr;
+      case 'Maghrib':
+        return Prayer.maghrib;
+      case 'Isha':
+        return Prayer.isha;
+      default:
+        throw Exception('Unknown prayer name: $name');
+    }
   }
 
   // Helper to get DateTime for a prayer name
@@ -415,7 +419,8 @@ class _PanelWidgetState extends State<PanelWidget>
 
   // Add dialog for all offsets at once
   void showOffsetDialogAll() async {
-    Map<String, int> tempOffsets = Map.from(prayerOffsets);
+    Map<Prayer, int> tempOffsets =
+        Map<Prayer, int>.from(offsetController.prayerOffsets);
     await showDialog<void>(
       context: context,
       barrierColor: Colors.black.withOpacity(0.5), // darken background
@@ -470,7 +475,8 @@ class _PanelWidgetState extends State<PanelWidget>
                                       children: [
                                         SizedBox(
                                             width: 70,
-                                            child: Text(prayer,
+                                            child: Text(
+                                                _prayerEnumToName(prayer),
                                                 style: TextStyle(
                                                     color: Colors.white
                                                         .withOpacity(0.9),
@@ -542,10 +548,7 @@ class _PanelWidgetState extends State<PanelWidget>
                               ),
                             ),
                             onPressed: () async {
-                              setState(() {
-                                prayerOffsets = Map.from(tempOffsets);
-                              });
-                              await _savePrayerOffsets();
+                              offsetController.setAllOffsets(tempOffsets);
                               Navigator.of(context).pop();
                             },
                             child: const Text('Save'),
@@ -561,5 +564,25 @@ class _PanelWidgetState extends State<PanelWidget>
         );
       },
     );
+  }
+
+  // Helper to map Prayer enum to display name
+  String _prayerEnumToName(Prayer prayer) {
+    switch (prayer) {
+      case Prayer.fajr:
+        return 'Fajr';
+      case Prayer.sunrise:
+        return 'Sunrise';
+      case Prayer.dhuhr:
+        return 'Duhr';
+      case Prayer.asr:
+        return 'Asr';
+      case Prayer.maghrib:
+        return 'Maghrib';
+      case Prayer.isha:
+        return 'Isha';
+      default:
+        return prayer.name;
+    }
   }
 }

@@ -7,6 +7,8 @@ import 'package:adhanminima/utils/sizedbox.dart';
 import 'package:adhanminima/utils/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:get/get.dart';
+import 'package:adhanminima/controllers/prayer_offset_controller.dart';
 
 class HomeWidget extends StatefulWidget {
   final PrayerTimes prayerTimes;
@@ -53,9 +55,13 @@ class _HomeWidgetState extends State<HomeWidget>
 
   void _initializeFormattedDiff() {
     DateTime current = DateTime.now();
-    DateTime? next = prayerTimes.timeForPrayer(prayerTimes.nextPrayer());
-
+    final nextPrayerEnum = prayerTimes.nextPrayer();
+    DateTime? next = prayerTimes.timeForPrayer(nextPrayerEnum);
+    final PrayerOffsetController offsetController = Get.find();
     if (next != null) {
+      // Apply offset from controller using enum as key
+      final offset = offsetController.prayerOffsets[nextPrayerEnum] ?? 0;
+      next = next.add(Duration(minutes: offset));
       Duration diff = current.difference(next).abs();
       formattedDiff = _formatDuration(diff);
     } else {
@@ -68,9 +74,13 @@ class _HomeWidgetState extends State<HomeWidget>
       if (mounted) {
         setState(() {
           DateTime current = DateTime.now();
-          DateTime? next = prayerTimes.timeForPrayer(prayerTimes.nextPrayer());
-
+          final nextPrayerEnum = prayerTimes.nextPrayer();
+          DateTime? next = prayerTimes.timeForPrayer(nextPrayerEnum);
+          final PrayerOffsetController offsetController = Get.find();
           if (next != null) {
+            // Apply offset from controller using enum as key
+            final offset = offsetController.prayerOffsets[nextPrayerEnum] ?? 0;
+            next = next.add(Duration(minutes: offset));
             Duration diff = current.difference(next).abs();
             formattedDiff = _formatDuration(diff);
           } else {
@@ -101,62 +111,66 @@ class _HomeWidgetState extends State<HomeWidget>
   @override
   Widget build(BuildContext context) {
     super.build(context); // Ensure this is called to keep the state
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Column(
+    return GetBuilder<PrayerOffsetController>(
+      builder: (offsetController) {
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              formattedDiff,
-              style: cusTextStyle(55, FontWeight.w500),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Column(
               children: [
                 Text(
-                  "left until ",
-                  style: cusTextStyle(24, FontWeight.w300),
+                  formattedDiff,
+                  style: cusTextStyle(55, FontWeight.w500),
                 ),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      prayerTimes.nextPrayer().name[0].toUpperCase(),
-                      style: cusTextStyle(24, FontWeight.w400),
+                      "left until ",
+                      style: cusTextStyle(24, FontWeight.w300),
                     ),
-                    Text(
-                      prayerTimes.nextPrayer().name.substring(1),
-                      style: cusTextStyle(24, FontWeight.w400),
+                    Row(
+                      children: [
+                        Text(
+                          prayerTimes.nextPrayer().name[0].toUpperCase(),
+                          style: cusTextStyle(24, FontWeight.w400),
+                        ),
+                        Text(
+                          prayerTimes.nextPrayer().name.substring(1),
+                          style: cusTextStyle(24, FontWeight.w400),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-            verticalBox(40),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.location_on_outlined,
-                  color: Colors.white,
-                ),
-                horizontalBox(7),
+                verticalBox(40),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      place.locality.toString(),
-                      style: cusTextStyle(18, FontWeight.w200),
+                    const Icon(
+                      Icons.location_on_outlined,
+                      color: Colors.white,
                     ),
-                    Text(
-                      ", ${place.isoCountryCode.toString()}",
-                      style: cusTextStyle(18, FontWeight.w200),
+                    horizontalBox(7),
+                    Row(
+                      children: [
+                        Text(
+                          place.locality.toString(),
+                          style: cusTextStyle(18, FontWeight.w200),
+                        ),
+                        Text(
+                          ", ${place.isoCountryCode.toString()}",
+                          style: cusTextStyle(18, FontWeight.w200),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ],
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 }

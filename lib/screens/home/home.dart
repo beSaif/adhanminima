@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:adhan/adhan.dart';
 import 'package:adhanminima/api/quranic_verse.dart';
+import 'package:adhanminima/controllers/prayer_offset_controller.dart';
 import 'package:adhanminima/screens/home/components/homeWidget.dart';
 import 'package:adhanminima/screens/home/components/locationDialog.dart';
 import 'package:adhanminima/screens/home/components/panelWidget.dart';
@@ -11,6 +12,7 @@ import 'package:adhanminima/utils/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:get/get.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 class Home extends StatefulWidget {
@@ -40,6 +42,8 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
+    // Initialize PrayerOffsetController
+    Get.put(PrayerOffsetController());
     _future = _initializeData();
     _pageController.addListener(() {
       int page = _pageController.page?.round() ?? 0;
