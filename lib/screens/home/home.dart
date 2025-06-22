@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 import 'package:adhan/adhan.dart';
 import 'package:adhanminima/api/quranic_verse.dart';
 import 'package:adhanminima/controllers/prayer_offset_controller.dart';
@@ -38,6 +39,8 @@ class _HomeState extends State<Home> {
   Coordinates myCoordinates = Coordinates(0, 0);
 
   late Future<void> _future;
+
+  bool _showErrorAnim = false;
 
   @override
   void initState() {
@@ -164,12 +167,184 @@ class _HomeState extends State<Home> {
     );
   }
 
+  String _getFriendlyErrorMessage(Object? error) {
+    final errorStr = error?.toString() ?? '';
+    if (errorStr.contains('Location services are disabled')) {
+      return 'Location services are turned off. Please enable them in your device settings.';
+    } else if (errorStr.contains('Location permissions are denied')) {
+      return 'Location permission denied. Please allow location access for this app.';
+    } else if (errorStr.contains('permanently denied')) {
+      return 'Location permission permanently denied. Please enable it from your device settings.';
+    } else if (errorStr.contains('PlatformException') &&
+        errorStr.contains('UNAVAILABLE')) {
+      return 'Location service is currently unavailable. Please try again later or check your device settings.';
+    } else {
+      return 'An unexpected error occurred. Please try again.';
+    }
+  }
+
   Widget _buildErrorScreen(Object? error) {
     debugPrint('Error: $error');
-    return Center(
-      child: Text(
-        'Error: $error',
-        style: cusTextStyle(16, FontWeight.w400),
+    // Trigger animation after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_showErrorAnim) {
+        setState(() {
+          _showErrorAnim = true;
+        });
+      }
+    });
+    bool showDetails = false;
+    return StatefulBuilder(
+      builder: (context, setLocalState) => Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+          child: AnimatedScale(
+            scale: _showErrorAnim ? 1.0 : 0.8,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeOutBack,
+            child: AnimatedOpacity(
+              opacity: _showErrorAnim ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeIn,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(32),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.13),
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(
+                          color: Colors.redAccent.withOpacity(0.25),
+                          width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.12),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          height: 120,
+                          child: Image.asset(
+                            'assets/location-animation.json',
+                            package: null,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
+                              Icons.error_outline,
+                              color: Colors.redAccent,
+                              size: 80,
+                            ),
+                          ),
+                        ),
+                        verticalBox(16),
+                        Text(
+                          'Oops! Something went wrong',
+                          style: cusTextStyle(22, FontWeight.w800),
+                          textAlign: TextAlign.center,
+                        ),
+                        verticalBox(10),
+                        Text(
+                          _getFriendlyErrorMessage(error),
+                          style: cusTextStyle(16, FontWeight.w400)
+                              .copyWith(color: Colors.redAccent.shade100),
+                          textAlign: TextAlign.center,
+                        ),
+                        if (error != null) ...[
+                          verticalBox(8),
+                          Align(
+                            alignment: Alignment.center,
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide.none,
+                                foregroundColor: Colors.redAccent,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                textStyle: cusTextStyle(14, FontWeight.w500),
+                              ),
+                              onPressed: () {
+                                setLocalState(() {
+                                  showDetails = !showDetails;
+                                });
+                              },
+                              icon: Icon(
+                                showDetails
+                                    ? Icons.expand_less
+                                    : Icons.expand_more,
+                                size: 18,
+                                color: Colors.redAccent,
+                              ),
+                              label: Text(
+                                showDetails ? 'Hide Details' : 'Show Details',
+                                style:
+                                    cusTextStyle(14, FontWeight.w500).copyWith(
+                                  color: Colors.redAccent,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ),
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 250),
+                            child: showDetails
+                                ? Container(
+                                    key: const ValueKey('details'),
+                                    margin: const EdgeInsets.only(top: 4),
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                          color: Colors.redAccent
+                                              .withOpacity(0.15)),
+                                    ),
+                                    child: Text(
+                                      error.toString(),
+                                      style: cusTextStyle(12, FontWeight.w400)
+                                          .copyWith(color: Colors.white70),
+                                      textAlign: TextAlign.left,
+                                    ),
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
+                        ],
+                        verticalBox(16),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              _showErrorAnim = false;
+                              _future = _initializeData();
+                            });
+                          },
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Retry'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 32, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            textStyle: cusTextStyle(16, FontWeight.w600),
+                            elevation: 2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
