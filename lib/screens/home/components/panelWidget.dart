@@ -11,6 +11,21 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:get/get.dart';
 import 'package:adhanminima/controllers/prayer_offset_controller.dart';
 
+// Custom Tween for DateTime interpolation
+class DateTimeTween extends Tween<DateTime> {
+  DateTimeTween({required DateTime begin, required DateTime end})
+      : super(begin: begin, end: end);
+
+  @override
+  DateTime lerp(double t) {
+    return DateTime.fromMillisecondsSinceEpoch(
+      (begin!.millisecondsSinceEpoch +
+              (end!.millisecondsSinceEpoch - begin!.millisecondsSinceEpoch) * t)
+          .round(),
+    );
+  }
+}
+
 class PanelWidget extends StatefulWidget {
   PrayerTimes prayerTimes;
   PageController pageController;
@@ -44,6 +59,10 @@ class _PanelWidgetState extends State<PanelWidget>
   late Animation<double> _iconScale;
   late final ScrollController _scrollController = ScrollController();
 
+  // Store previous and new DateTime for each prayer for animation
+  final Map<Prayer, DateTime> _previousPrayerTimes = {};
+  final Map<Prayer, DateTime> _currentPrayerTimes = {};
+
   @override
   void initState() {
     super.initState();
@@ -57,9 +76,43 @@ class _PanelWidgetState extends State<PanelWidget>
       parent: _iconAnimController,
       curve: Curves.easeInOut,
     );
+    _initPrayerTimesForAnimation();
     // NotificationApi.init(initScheduled: true);
     // listenNotifications();
     //setNotification(prayerTimes);
+  }
+
+  void _initPrayerTimesForAnimation() {
+    // Initialize both previous and current to the same value
+    for (var prayer in Prayer.values) {
+      final dt = _getPrayerTimeWithOffset(prayer);
+      _previousPrayerTimes[prayer] = dt;
+      _currentPrayerTimes[prayer] = dt;
+    }
+  }
+
+  void _updatePrayerTimesForAnimation() {
+    for (var prayer in Prayer.values) {
+      _previousPrayerTimes[prayer] = _currentPrayerTimes[prayer]!;
+      _currentPrayerTimes[prayer] = _getPrayerTimeWithOffset(prayer);
+    }
+  }
+
+  DateTime _getPrayerTimeWithOffset(Prayer prayer) {
+    final offset = offsetController.prayerOffsets[prayer] ?? 0;
+    final baseTime = _getPrayerTime(_prayerEnumToName(prayer));
+    return baseTime.add(Duration(minutes: offset));
+  }
+
+  @override
+  void didUpdateWidget(PanelWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.prayerTimes != oldWidget.prayerTimes) {
+      setState(() {
+        prayerTimes = widget.prayerTimes;
+        _initPrayerTimesForAnimation();
+      });
+    }
   }
 
   @override
@@ -130,6 +183,8 @@ class _PanelWidgetState extends State<PanelWidget>
 
     return GetBuilder<PrayerOffsetController>(
       builder: (_) {
+        // On offset change, update animation targets
+        _updatePrayerTimesForAnimation();
         return Column(
           children: [
             AnimatedOpacity(
@@ -149,66 +204,37 @@ class _PanelWidgetState extends State<PanelWidget>
                   child: (() {
                     return Column(
                       children: [
-                        prayerTime(
-                            false,
-                            'Fajr',
-                            DateFormat.jm().format(prayerTimes.fajr),
-                            nextPrayer),
+                        prayerTimeAnimated('Fajr', nextPrayer),
                         verticalBox(2),
                         const Divider(
                           color: Colors.white,
                         ),
                         verticalBox(10),
-                        //
-                        prayerTime(
-                            false,
-                            'Sunrise',
-                            DateFormat.jm().format(prayerTimes.sunrise),
-                            nextPrayer),
+                        prayerTimeAnimated('Sunrise', nextPrayer),
                         verticalBox(2),
                         const Divider(
                           color: Colors.white,
                         ),
                         verticalBox(10),
-                        //
-                        prayerTime(
-                            false,
-                            'Duhr',
-                            DateFormat.jm().format(prayerTimes.dhuhr),
-                            nextPrayer),
+                        prayerTimeAnimated('Duhr', nextPrayer),
                         verticalBox(2),
                         const Divider(
                           color: Colors.white,
                         ),
                         verticalBox(10),
-                        //
-                        prayerTime(
-                            false,
-                            'Asr',
-                            DateFormat.jm().format(prayerTimes.asr),
-                            nextPrayer),
+                        prayerTimeAnimated('Asr', nextPrayer),
                         verticalBox(2),
                         const Divider(
                           color: Colors.white,
                         ),
                         verticalBox(10),
-                        //
-                        prayerTime(
-                            false,
-                            'Maghrib',
-                            DateFormat.jm().format(prayerTimes.maghrib),
-                            nextPrayer),
+                        prayerTimeAnimated('Maghrib', nextPrayer),
                         verticalBox(2),
                         const Divider(
                           color: Colors.white,
                         ),
                         verticalBox(10),
-                        //
-                        prayerTime(
-                            false,
-                            'Isha',
-                            DateFormat.jm().format(prayerTimes.isha),
-                            nextPrayer),
+                        prayerTimeAnimated('Isha', nextPrayer),
                         verticalBox(2),
                         const Divider(
                           color: Colors.white,
@@ -343,6 +369,66 @@ class _PanelWidgetState extends State<PanelWidget>
                     return FontWeight.w300;
                   }()),
                 )),
+            horizontalBox(10),
+          ],
+        )
+      ],
+    );
+  }
+
+  Widget prayerTimeAnimated(String prayerName, String nextPrayer) {
+    final prayerEnum = _prayerNameToEnum(prayerName);
+    final prevTime = _previousPrayerTimes[prayerEnum]!;
+    final currTime = _currentPrayerTimes[prayerEnum]!;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Text(prayerName,
+                style: TextStyle(
+                    fontFamily: 'Halenoir',
+                    color: (() {
+                      if (nextPrayer[0] == prayerName[0]) {
+                        return Colors.white;
+                      }
+                      return Colors.white70;
+                    }()),
+                    fontSize: 24,
+                    fontWeight: (() {
+                      if (nextPrayer[0] == prayerName[0]) {
+                        return FontWeight.w900;
+                      }
+                      return FontWeight.w400;
+                    }()))),
+          ],
+        ),
+        Row(
+          children: [
+            TweenAnimationBuilder<DateTime>(
+              tween: DateTimeTween(begin: prevTime, end: currTime),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeInOut,
+              builder: (context, value, child) {
+                return Text(DateFormat.jm().format(value),
+                    style: TextStyle(
+                      fontFamily: 'Halenoir',
+                      color: (() {
+                        if (nextPrayer[0] == prayerName[0]) {
+                          return Colors.white;
+                        }
+                        return Colors.white70;
+                      }()),
+                      fontSize: 24,
+                      fontWeight: (() {
+                        if (nextPrayer[0] == prayerName[0]) {
+                          return FontWeight.w900;
+                        }
+                        return FontWeight.w300;
+                      }()),
+                    ));
+              },
+            ),
             horizontalBox(10),
           ],
         )

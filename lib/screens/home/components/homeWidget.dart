@@ -30,6 +30,8 @@ class _HomeWidgetState extends State<HomeWidget>
   late Placemark place;
   Timer? _timer;
   String formattedDiff = "";
+  int _previousDiffSeconds = 0;
+  int _targetDiffSeconds = 0;
 
   @override
   void initState() {
@@ -62,10 +64,13 @@ class _HomeWidgetState extends State<HomeWidget>
       // Apply offset from controller using enum as key
       final offset = offsetController.prayerOffsets[nextPrayerEnum] ?? 0;
       next = next.add(Duration(minutes: offset));
-      Duration diff = current.difference(next).abs();
-      formattedDiff = _formatDuration(diff);
+      Duration diff = next.difference(current);
+      _previousDiffSeconds = _targetDiffSeconds;
+      _targetDiffSeconds = diff.inSeconds;
+      formattedDiff = _formatDuration(diff.abs());
     } else {
       formattedDiff = "N/A"; // Handle the case where next prayer time is null
+      _previousDiffSeconds = _targetDiffSeconds = 0;
     }
   }
 
@@ -81,11 +86,14 @@ class _HomeWidgetState extends State<HomeWidget>
             // Apply offset from controller using enum as key
             final offset = offsetController.prayerOffsets[nextPrayerEnum] ?? 0;
             next = next.add(Duration(minutes: offset));
-            Duration diff = current.difference(next).abs();
-            formattedDiff = _formatDuration(diff);
+            Duration diff = next.difference(current);
+            _previousDiffSeconds = _targetDiffSeconds;
+            _targetDiffSeconds = diff.inSeconds;
+            formattedDiff = _formatDuration(diff.abs());
           } else {
             formattedDiff =
                 "N/A"; // Handle the case where next prayer time is null
+            _previousDiffSeconds = _targetDiffSeconds = 0;
           }
         });
       }
@@ -113,14 +121,37 @@ class _HomeWidgetState extends State<HomeWidget>
     super.build(context); // Ensure this is called to keep the state
     return GetBuilder<PrayerOffsetController>(
       builder: (offsetController) {
+        // Recalculate on offset change
+        DateTime current = DateTime.now();
+        final nextPrayerEnum = prayerTimes.nextPrayer();
+        DateTime? next = prayerTimes.timeForPrayer(nextPrayerEnum);
+        int begin = _previousDiffSeconds;
+        int end = _targetDiffSeconds;
+        if (next != null) {
+          final offset = offsetController.prayerOffsets[nextPrayerEnum] ?? 0;
+          next = next.add(Duration(minutes: offset));
+          Duration diff = next.difference(current);
+          begin = _previousDiffSeconds;
+          end = diff.inSeconds;
+        } else {
+          begin = end = 0;
+        }
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Column(
               children: [
-                Text(
-                  formattedDiff,
-                  style: cusTextStyle(55, FontWeight.w500),
+                TweenAnimationBuilder<int>(
+                  tween: IntTween(begin: begin, end: end),
+                  duration: const Duration(milliseconds: 800),
+                  curve: Curves.easeInOut,
+                  builder: (context, value, child) {
+                    final duration = Duration(seconds: value.abs());
+                    return Text(
+                      _formatDuration(duration),
+                      style: cusTextStyle(55, FontWeight.w500),
+                    );
+                  },
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
