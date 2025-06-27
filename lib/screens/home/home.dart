@@ -3,9 +3,9 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:adhan/adhan.dart';
 import 'package:adhanminima/api/quranic_verse.dart';
+import 'package:adhanminima/controllers/location_controller.dart';
 import 'package:adhanminima/controllers/prayer_offset_controller.dart';
 import 'package:adhanminima/screens/home/components/homeWidget.dart';
-import 'package:adhanminima/screens/home/components/locationDialog.dart';
 import 'package:adhanminima/screens/home/components/panelWidget.dart';
 import 'package:adhanminima/screens/home/components/qiblaWidget.dart';
 import 'package:adhanminima/utils/sizedbox.dart';
@@ -32,21 +32,23 @@ class _HomeState extends State<Home> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   String formattedDiff = "0";
-  double lat = 0.0;
-  double long = 0.0;
-  Placemark? place;
+
+  // Remove individual location variables - now handled by LocationController
   PrayerTimes? prayerTimes;
   Coordinates myCoordinates = Coordinates(0, 0);
 
   late Future<void> _future;
+  late LocationController locationController;
 
   bool _showErrorAnim = false;
 
   @override
   void initState() {
     super.initState();
-    // Initialize PrayerOffsetController
+    // Initialize controllers
+    locationController = Get.put(LocationController());
     Get.put(PrayerOffsetController());
+
     _future = _initializeData();
     _pageController.addListener(() {
       int page = _pageController.page?.round() ?? 0;
@@ -65,15 +67,24 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> _initializeData() async {
-    Position position = await _getCoordinates();
-    lat = position.latitude;
-    long = position.longitude;
-    debugPrint('Latitude: $lat, Longitude: $long');
+    // Get location using LocationController
+    Position? position = await locationController.getCurrentLocation();
+    if (position == null) {
+      throw Exception(locationController.error.isNotEmpty
+          ? locationController.error
+          : 'Unable to get location');
+    }
 
-    place = await _convertLocation(lat, long);
-    debugPrint('Place: ${place!.name}');
+    debugPrint(
+        'Latitude: ${position.latitude}, Longitude: ${position.longitude}');
 
-    myCoordinates = Coordinates(lat, long);
+    // Get placemark using LocationController
+    Placemark? place = await locationController.getPlacemark();
+    if (place != null) {
+      debugPrint('Place: ${place.name}');
+    }
+
+    myCoordinates = Coordinates(position.latitude, position.longitude);
     debugPrint('Coordinates: $myCoordinates');
 
     await _getPrayerTimes();
@@ -125,7 +136,8 @@ class _HomeState extends State<Home> {
         children: [
           HomeWidget(
             prayerTimes: prayerTimes!,
-            place: place!,
+            place: locationController.currentPlacemark ??
+                const Placemark(name: 'Unknown Location'), // Fallback placemark
           ),
           const QiblahCompass(),
         ],
@@ -169,6 +181,13 @@ class _HomeState extends State<Home> {
 
   String _getFriendlyErrorMessage(Object? error) {
     final errorStr = error?.toString() ?? '';
+
+    // First check if LocationController has a specific error message
+    if (locationController.error.isNotEmpty) {
+      return locationController.error;
+    }
+
+    // Fallback to manual parsing for other errors
     if (errorStr.contains('Location services are disabled')) {
       return 'Location services are turned off. Please enable them in your device settings.';
     } else if (errorStr.contains('Location permissions are denied')) {
@@ -178,6 +197,8 @@ class _HomeState extends State<Home> {
     } else if (errorStr.contains('PlatformException') &&
         errorStr.contains('UNAVAILABLE')) {
       return 'Location service is currently unavailable. Please try again later or check your device settings.';
+    } else if (errorStr.contains('Unable to get location')) {
+      return 'Could not determine your location. Please check your internet connection and make sure location services are active.';
     } else {
       return 'An unexpected error occurred. Please try again.';
     }
@@ -320,7 +341,10 @@ class _HomeState extends State<Home> {
                           onPressed: () {
                             setState(() {
                               _showErrorAnim = false;
-                              _future = _initializeData();
+                              // Use LocationController's retry method
+                              _future = locationController
+                                  .initializeLocation()
+                                  .then((_) => _initializeData());
                             });
                           },
                           icon: const Icon(Icons.refresh),
@@ -347,42 +371,6 @@ class _HomeState extends State<Home> {
         ),
       ),
     );
-  }
-
-  Future<Position> _getCoordinates() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      _showLocationDialog();
-      return Future.error('Location services are disabled.');
-    }
-
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return Future.error('Location permissions are denied');
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      return Future.error(
-          'Location permissions are permanently denied, we cannot request permissions.');
-    }
-
-    return await Geolocator.getCurrentPosition();
-  }
-
-  void _showLocationDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => locationDialog(context),
-    );
-  }
-
-  Future<Placemark> _convertLocation(double lat, double long) async {
-    debugPrint('Converting location...');
-    List<Placemark> placemarks = await placemarkFromCoordinates(lat, long);
-    return placemarks[0];
   }
 
   Future<void> _getPrayerTimes() async {

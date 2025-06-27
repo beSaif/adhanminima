@@ -4,12 +4,14 @@ import 'dart:async';
 import 'dart:math' show pi, sin, cos;
 import 'dart:ui';
 
+import 'package:adhanminima/controllers/location_controller.dart';
 import 'package:adhanminima/utils/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:adhanminima/utils/qibla_bearing.dart';
+import 'package:get/get.dart';
 
 class QiblahCompass extends StatefulWidget {
   const QiblahCompass({Key? key}) : super(key: key);
@@ -48,9 +50,13 @@ class _QiblahCompassWidgetState extends State<QiblahCompassWidget> {
   bool _isLoading = false;
   bool _calibrationSheetShown = false;
 
+  late LocationController locationController;
+
   @override
   void initState() {
     super.initState();
+    // Get the existing LocationController instance
+    locationController = Get.find<LocationController>();
     _getLocationAndQibla();
   }
 
@@ -59,41 +65,36 @@ class _QiblahCompassWidgetState extends State<QiblahCompassWidget> {
       _isLoading = true;
       locationError = null;
     });
+
     try {
-      Position? pos = await Geolocator.getLastKnownPosition();
-      if (pos == null) {
-        debugPrint(
-            'No last known position found, requesting current position...');
-        pos = await Geolocator.getCurrentPosition();
-      } else {
-        debugPrint(
-            'Using last known position: ${pos.latitude}, ${pos.longitude}');
-        // Update with current position in background
-        Geolocator.getCurrentPosition().then((freshPos) {
-          if (mounted) {
-            debugPrint(
-                'Updated position in background: ${freshPos.latitude}, ${freshPos.longitude}');
-            final bearing = calculateQiblaBearing(
-                freshPos.latitude, freshPos.longitude, 21.4225, 39.8262);
-            setState(() {
-              qiblaBearing = bearing;
-            });
-          }
-        });
+      // Use LocationController to get position
+      Position? position = await locationController.getCurrentLocation();
+
+      if (position == null) {
+        throw Exception(locationController.error.isNotEmpty
+            ? locationController.error
+            : 'Unable to get location');
       }
+
+      debugPrint(
+          'Qibla: Using position: ${position.latitude}, ${position.longitude}');
+
       // Kaaba coordinates
       const double kaabaLat = 21.4225;
       const double kaabaLon = 39.8262;
+
       final bearing = calculateQiblaBearing(
-          pos.latitude, pos.longitude, kaabaLat, kaabaLon);
+          position.latitude, position.longitude, kaabaLat, kaabaLon);
+
       setState(() {
         qiblaBearing = bearing;
         _isLoading = false;
       });
     } catch (e) {
       setState(() {
-        locationError =
-            'Location unavailable. Please enable location and retry.';
+        locationError = locationController.error.isNotEmpty
+            ? locationController.error
+            : 'Location unavailable. Please enable location and retry.';
         _isLoading = false;
       });
     }
