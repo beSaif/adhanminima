@@ -1,10 +1,10 @@
 # adhanminima
 
-Adhaan by codeSaif is built to fight against apps like MuslimPro which stored and sold user data to third-party clients (including the US govt).  
+Adhaan by codeSaif is built to fight against apps like MuslimPro which stored and sold user data to third-party clients (including the US govt).
 
-Features:  
+Features:
 
-- We do not store your data or location.  
+- We do not store your data or location.
 - We do not display any ads.
 
 ## Download
@@ -12,9 +12,8 @@ Features:
 [<img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png"
       alt="Download from Google Play"
       height="80">](https://play.google.com/store/apps/details?id=in.codesaif.adhaan)
-      
-## Screenshots
 
+## Screenshots
 
 <img src="https://play-lh.googleusercontent.com/SupHyUe5MXGJbvfEcpPRIDYh7JbDKt_l6uGS2s7WNOh8C1WYOjIN802qVTngnRR27w=w2560-h1440-rw"
       alt="Download from Google Play"
@@ -23,3 +22,12 @@ Features:
       height="586">&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://play-lh.googleusercontent.com/e6T-Cp8jhRkyVrV1wNLV8oGs0-aqnQqlKMNSAybK9lX76av8f-TS09FP1ZAEepHyyd90=w2560-h1440-rw"
       alt="Download from Google Play"
       height="586">
+
+## To-Do
+
+- [ ] If location services are disabled, show a dialog to enable them
+
+## Deployment
+
+- Use `flutter build appbundle` to generate the app bundle
+- Upload the generated `.aab` file to Google Play Console
