@@ -139,61 +139,57 @@ class _HomeWidgetState extends State<HomeWidget>
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Column(
+            TweenAnimationBuilder<int>(
+              tween: IntTween(begin: begin, end: end),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeInOut,
+              builder: (context, value, child) {
+                final duration = Duration(seconds: value.abs());
+                return Text(
+                  _formatDuration(duration),
+                  style: cusTextStyle(55, FontWeight.w500),
+                );
+              },
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                TweenAnimationBuilder<int>(
-                  tween: IntTween(begin: begin, end: end),
-                  duration: const Duration(milliseconds: 800),
-                  curve: Curves.easeInOut,
-                  builder: (context, value, child) {
-                    final duration = Duration(seconds: value.abs());
-                    return Text(
-                      _formatDuration(duration),
-                      style: cusTextStyle(55, FontWeight.w500),
-                    );
-                  },
+                Text(
+                  "left until ",
+                  style: cusTextStyle(24, FontWeight.w300),
                 ),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "left until ",
-                      style: cusTextStyle(24, FontWeight.w300),
+                      prayerTimes.nextPrayer().name[0].toUpperCase(),
+                      style: cusTextStyle(24, FontWeight.w400),
                     ),
-                    Row(
-                      children: [
-                        Text(
-                          prayerTimes.nextPrayer().name[0].toUpperCase(),
-                          style: cusTextStyle(24, FontWeight.w400),
-                        ),
-                        Text(
-                          prayerTimes.nextPrayer().name.substring(1),
-                          style: cusTextStyle(24, FontWeight.w400),
-                        ),
-                      ],
+                    Text(
+                      prayerTimes.nextPrayer().name.substring(1),
+                      style: cusTextStyle(24, FontWeight.w400),
                     ),
                   ],
                 ),
-                verticalBox(40),
+              ],
+            ),
+            verticalBox(40),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.location_on_outlined,
+                  color: Colors.white,
+                ),
+                horizontalBox(7),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
-                      Icons.location_on_outlined,
-                      color: Colors.white,
+                    Text(
+                      place.locality.toString(),
+                      style: cusTextStyle(18, FontWeight.w200),
                     ),
-                    horizontalBox(7),
-                    Row(
-                      children: [
-                        Text(
-                          place.locality.toString(),
-                          style: cusTextStyle(18, FontWeight.w200),
-                        ),
-                        Text(
-                          ", ${place.isoCountryCode.toString()}",
-                          style: cusTextStyle(18, FontWeight.w200),
-                        ),
-                      ],
+                    Text(
+                      ", ${place.isoCountryCode.toString()}",
+                      style: cusTextStyle(18, FontWeight.w200),
                     ),
                   ],
                 ),

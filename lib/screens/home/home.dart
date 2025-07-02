@@ -123,11 +123,10 @@ class _HomeState extends State<Home> {
 
   _buildMainWidget(BuildContext context) {
     return SlidingUpPanel(
-      maxHeight: 550,
+      maxHeight: 500,
       controller: panelController,
       parallaxEnabled: true,
-      parallaxOffset: .5,
-
+      parallaxOffset: .65,
       color: Colors.transparent,
       backdropEnabled: true,
       // backdropTapClosesPanel: true,
