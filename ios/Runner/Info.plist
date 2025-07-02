@@ -51,10 +51,17 @@
 		</array>
 
 		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>We need your location to provide relevant content.</string>
+		<string>We need access to your location to determine accurate prayer times and Qibla
+			direction for your area.</string>
 
 		<key>NSLocationAlwaysUsageDescription</key>
-		<string>We need your location to provide relevant content even when the app is not in use.</string>
+		<string>We need access to your location to provide prayer time notifications and Qibla
+			direction even when the app is not in use.</string>
+
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>We need access to your location to determine accurate prayer times and Qibla
+			direction for your area, including when the app is running in the background for prayer
+			notifications.</string>
 
 		<key>UIUserNotificationSettings</key>
 		<dict>
