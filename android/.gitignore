@@ -12,3 +12,6 @@ key.properties
 app/upload-keystore.jks
 **/*.keystore
 **/*.jks
+/build/
+.kotlin/
+.cxx/
