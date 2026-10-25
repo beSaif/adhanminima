@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 
+import 'services/compass_service.dart';
 import 'state/app_state.dart';
 import 'theme.dart';
 import 'ui/home_shell.dart';
 import 'ui/onboarding_screen.dart';
 
 class AdhaanApp extends StatelessWidget {
-  const AdhaanApp({super.key, required this.state});
+  const AdhaanApp({super.key, required this.state, this.compass});
 
   final AppState state;
+
+  /// Replaces the device compass, e.g. for screenshots.
+  final CompassService? compass;
 
   @override
   Widget build(BuildContext context) {
@@ -18,14 +22,16 @@ class AdhaanApp extends StatelessWidget {
         title: 'Adhaan',
         debugShowCheckedModeBanner: false,
         theme: buildTheme(),
-        home: const _Root(),
+        home: _Root(compass: compass),
       ),
     );
   }
 }
 
 class _Root extends StatelessWidget {
-  const _Root();
+  const _Root({this.compass});
+
+  final CompassService? compass;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +39,7 @@ class _Root extends StatelessWidget {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 300),
       child: hasPlace
-          ? const HomeShell(key: ValueKey('home'))
+          ? HomeShell(key: const ValueKey('home'), compass: compass)
           : const OnboardingScreen(key: ValueKey('onboarding')),
     );
   }
