@@ -1,0 +1,130 @@
+# Release lanes for Adhaan. Run from the repo root:
+#
+#   bundle exec fastlane android android_internal     # build + upload to Play internal testing
+#   bundle exec fastlane android android_production   # promote that build to production, 20% rollout
+#   bundle exec fastlane ios ios_beta                 # build + upload to TestFlight
+#   bundle exec fastlane ios ios_release              # submit that build for App Review (manual release)
+#
+# Secrets are read only from fastlane/.env and ~/.adhaan-secrets/ (see .env.example).
+
+ROOT = File.expand_path("..", __dir__)
+PACKAGE = "in.codesaif.adhaan"
+
+# [version name, build number] from pubspec.yaml, e.g. ["1.1.0", "18"].
+def pubspec_version
+  version = File.read(File.join(ROOT, "pubspec.yaml"))[/^version:\s*(\S+)/, 1]
+  UI.user_error!("No version in pubspec.yaml") unless version
+  version.split("+", 2)
+end
+
+def flutter(*args)
+  Dir.chdir(ROOT) { sh("flutter", *args) }
+end
+
+platform :android do
+  desc "Build a release bundle and upload it to the Play internal testing track"
+  lane :android_internal do
+    flutter("build", "appbundle", "--release")
+    upload_to_play_store(
+      track: "internal",
+      release_status: "completed",
+      aab: File.join(ROOT, "build/app/outputs/bundle/release/app-release.aab"),
+      metadata_path: File.join(__dir__, "metadata/android"),
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+    )
+  end
+
+  desc "Promote the current internal build to production as a 20% staged rollout"
+  lane :android_production do
+    _, build = pubspec_version
+    internal = google_play_track_version_codes(track: "internal")
+    unless internal.map(&:to_s).include?(build)
+      UI.user_error!("Build #{build} isn't on the internal track (found #{internal}). Run android_internal first.")
+    end
+    upload_to_play_store(
+      track: "internal",
+      track_promote_to: "production",
+      version_code: build.to_i,
+      rollout: "0.2",
+      # Without this a promoted release goes straight to 100% ("completed").
+      track_promote_release_status: "inProgress",
+      metadata_path: File.join(__dir__, "metadata/android"),
+      skip_upload_aab: true,
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+    )
+  end
+
+  desc "Upload the phone screenshots in fastlane/metadata/android to the store listing"
+  lane :android_screenshots do
+    upload_to_play_store(
+      metadata_path: File.join(__dir__, "metadata/android"),
+      skip_upload_aab: true,
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+    )
+  end
+end
+
+platform :ios do
+  def asc_api_key
+    app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_filepath: File.expand_path(ENV.fetch("ASC_KEY_PATH")),
+    )
+  end
+
+  desc "Build a signed IPA and upload it to TestFlight"
+  lane :ios_beta do
+    api_key = asc_api_key
+    # Flutter writes the version and build number into the generated config;
+    # Xcode then archives with automatic signing through the Apple Account
+    # signed in under Xcode > Settings > Accounts (the App Manager API key
+    # is only used for App Store Connect, not for creating certificates).
+    flutter("build", "ios", "--release", "--no-codesign")
+    build_app(
+      workspace: File.join(ROOT, "ios/Runner.xcworkspace"),
+      scheme: "Runner",
+      configuration: "Release",
+      export_method: "app-store",
+      export_options: { signingStyle: "automatic", teamID: ENV.fetch("APPLE_TEAM_ID") },
+      xcargs: "-allowProvisioningUpdates",
+      output_directory: File.join(ROOT, "build/ios/ipa"),
+      output_name: "Adhaan.ipa",
+    )
+    upload_to_testflight(
+      api_key: api_key,
+      changelog: File.read(File.join(__dir__, "metadata/ios/en-US/release_notes.txt")).strip,
+      skip_waiting_for_build_processing: true,
+    )
+  end
+
+  desc "Attach the TestFlight build to the App Store version and submit it for review"
+  lane :ios_release do
+    version, build = pubspec_version
+    deliver(
+      api_key: asc_api_key,
+      app_version: version,
+      build_number: build,
+      skip_binary_upload: true,
+      metadata_path: File.join(__dir__, "metadata/ios"),
+      screenshots_path: File.join(__dir__, "screenshots/ios"),
+      overwrite_screenshots: true,
+      submit_for_review: true,
+      automatic_release: false,
+      force: true, # no HTML preview; the metadata was reviewed in the PR
+      precheck_include_in_app_purchases: false,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false,
+      },
+    )
+  end
+end

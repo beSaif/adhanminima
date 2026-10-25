@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../services/compass_service.dart';
 import '../state/app_state.dart';
 import 'pill_nav.dart';
 import 'qibla_screen.dart';
@@ -7,7 +8,10 @@ import 'settings_screen.dart';
 import 'today_screen.dart';
 
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key});
+  const HomeShell({super.key, this.compass});
+
+  /// Replaces the device compass on the Qibla tab, e.g. for screenshots.
+  final CompassService? compass;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -50,7 +54,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
           children: [
             const TodayScreen(),
             // Only listen to the compass while the tab is visible.
-            QiblaScreen(active: _tab == 1),
+            QiblaScreen(active: _tab == 1, compass: widget.compass),
             const SettingsScreen(),
           ],
         ),

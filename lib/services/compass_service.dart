@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geomag/geomag.dart';
@@ -28,13 +30,25 @@ class CompassHeading extends CompassReading {
 }
 
 class CompassService {
+  CompassService({
+    this.events,
+    this.firstReadingTimeout = const Duration(seconds: 5),
+  });
+
+  /// Compass events to read instead of the platform's, e.g. in tests.
+  final Stream<CompassEvent>? events;
+
+  /// How long to wait for the first usable heading before treating the
+  /// device as having no compass. iOS simulators never send one.
+  final Duration firstReadingTimeout;
+
   /// Readings for a phone at ([latitude], [longitude]).
   ///
   /// iOS already reports true north; Android reports magnetic north, so the
   /// local declination from the World Magnetic Model is added there.
   Stream<CompassReading> readings(double latitude, double longitude) async* {
-    final events = FlutterCompass.events;
-    if (events == null) {
+    final source = events ?? FlutterCompass.events;
+    if (source == null) {
       yield CompassUnavailable();
       return;
     }
@@ -42,14 +56,26 @@ class CompassService {
     final declination = defaultTargetPlatform == TargetPlatform.android
         ? GeoMag().calculate(latitude, longitude, 0, DateTime.now()).dec
         : 0.0;
+    // Only the first heading is time-limited: a phone lying still can go
+    // quiet for a long time once it has reported.
+    var heard = false;
+    final guarded = source.timeout(
+      firstReadingTimeout,
+      onTimeout: (sink) {
+        if (!heard) {
+          sink.addError(TimeoutException('No compass heading'));
+        }
+      },
+    );
     try {
-      await for (final e in events) {
+      await for (final e in guarded) {
         final heading = e.heading;
         if (heading == null) {
           yield CompassUnavailable();
         } else if (heading >= 0 ||
             defaultTargetPlatform == TargetPlatform.android) {
           // iOS sends a negative true heading until it has a location fix.
+          heard = true;
           yield CompassHeading(
             Heading(
               (heading + declination) % 360,

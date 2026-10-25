@@ -1,0 +1,5 @@
+# Identifiers only. Credentials come from fastlane/.env and ~/.adhaan-secrets/.
+app_identifier("in.codesaif.adhaan")
+package_name("in.codesaif.adhaan")
+json_key_file(File.expand_path(ENV.fetch("PLAY_JSON_KEY", "~/.adhaan-secrets/play.json")))
+team_id(ENV["APPLE_TEAM_ID"]) if ENV["APPLE_TEAM_ID"]
