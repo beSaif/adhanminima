@@ -85,7 +85,9 @@ platform :ios do
   lane :ios_beta do
     api_key = asc_api_key
     # Flutter writes the version and build number into the generated config;
-    # Xcode then archives and signs with automatic signing via the API key.
+    # Xcode then archives with automatic signing through the Apple Account
+    # signed in under Xcode > Settings > Accounts (the App Manager API key
+    # is only used for App Store Connect, not for creating certificates).
     flutter("build", "ios", "--release", "--no-codesign")
     build_app(
       workspace: File.join(ROOT, "ios/Runner.xcworkspace"),
@@ -93,12 +95,7 @@ platform :ios do
       configuration: "Release",
       export_method: "app-store",
       export_options: { signingStyle: "automatic", teamID: ENV.fetch("APPLE_TEAM_ID") },
-      xcargs: [
-        "-allowProvisioningUpdates",
-        "-authenticationKeyPath #{File.expand_path(ENV.fetch('ASC_KEY_PATH'))}",
-        "-authenticationKeyID #{ENV.fetch('ASC_KEY_ID')}",
-        "-authenticationKeyIssuerID #{ENV.fetch('ASC_ISSUER_ID')}",
-      ].join(" "),
+      xcargs: "-allowProvisioningUpdates",
       output_directory: File.join(ROOT, "build/ios/ipa"),
       output_name: "Adhaan.ipa",
     )
