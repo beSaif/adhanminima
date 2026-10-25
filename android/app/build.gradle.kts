@@ -44,12 +44,9 @@ android {
 
     buildTypes {
         release {
-            // Fall back to debug signing when key.properties is absent (e.g. CI, fresh clones).
-            signingConfig = if (keystorePropertiesFile.exists()) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
-            }
+            // Always sign with the upload key. There is deliberately no debug-key fallback:
+            // a debug-signed bundle would be rejected by Play (see checkReleaseSigning below).
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -62,6 +59,23 @@ kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
+}
+
+// Fail release builds early, with a clear message, when the upload key isn't configured.
+// Debug and profile builds are unaffected.
+val hasKeystoreProperties = keystorePropertiesFile.exists()
+val checkReleaseSigning by tasks.registering {
+    doLast {
+        if (!hasKeystoreProperties) {
+            throw GradleException(
+                "android/key.properties is missing, so the release build can't be signed with " +
+                    "the Play upload key. Symlink it from ~/.adhaan-secrets/key.properties.",
+            )
+        }
+    }
+}
+tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+    dependsOn(checkReleaseSigning)
 }
 
 flutter {
