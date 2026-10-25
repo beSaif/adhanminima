@@ -23,9 +23,12 @@ Features:
       alt="Download from Google Play"
       height="586">
 
-## To-Do
+## Development
 
-- [ ] If location services are disabled, show a dialog to enable them
+Requires Flutter 3.47 or later (Dart 3.13).
+
+- `flutter test` runs the unit and widget tests
+- `lib/prayer/` holds the prayer-time and Qibla calculations, `lib/state/` the persisted settings, `lib/ui/` the screens
 
 ## Deployment
 

@@ -11,9 +11,19 @@ environment:
   sdk: ^3.13.0
 
 dependencies:
+  adhan: ^2.0.0+1
   cupertino_icons: ^2.0.0
   flutter:
     sdk: flutter
+  flutter_compass: ^0.8.1
+  flutter_local_notifications: ^22.3.3
+  flutter_timezone: ^5.1.1
+  geocoding: ^5.0.0
+  geolocator: ^14.1.2
+  geomag: ^0.3.0
+  hijri: ^3.0.1
+  shared_preferences: ^2.5.6
+  timezone: ^0.11.2
 
 dev_dependencies:
   flutter_launcher_icons: ^0.14.4
@@ -30,13 +40,18 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/
+    - assets/fonts/OFL.txt
 
   fonts:
-    - family: Halenoir
+    - family: InterTight
       fonts:
-        - asset: assets/font/Halenoir-Bold.otf
-        - asset: assets/font/Halenoir-ThinObl.otf
-        - asset: assets/font/Halenoir-UltraLight.otf
-        - asset: assets/font/HalenoirText-Regular.otf
-          style: italic
+        - asset: assets/fonts/InterTight-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/InterTight-Light.ttf
+          weight: 300
+        - asset: assets/fonts/InterTight-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/InterTight-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/InterTight-SemiBold.ttf
+          weight: 600
