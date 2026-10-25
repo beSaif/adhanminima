@@ -1,0 +1,2 @@
+- Show app content in SafeArea.
+- Upgrade targetSdkVersion to 35. 

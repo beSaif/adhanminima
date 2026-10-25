@@ -1,0 +1,1 @@
+A minimalistic Adhaan app that reminds you to pray on time.

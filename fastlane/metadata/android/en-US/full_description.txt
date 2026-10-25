@@ -1,0 +1,5 @@
+Adhaan by codeSaif is built to fight against apps like MuslimPro which stored and sold user data to third-party clients (including the US govt). 
+
+Features:
+   - We do not store your data or location.
+   - We do not display any ads.

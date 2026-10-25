@@ -46,3 +46,12 @@ app.*.map.json
 /android/app/release
 key/upload_certificate.pem
 key/upload-keystore.jks
+
+# fastlane: local config and generated reports. Secrets live in ~/.adhaan-secrets/.
+fastlane/.env
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/test_output/
+/vendor/bundle/
+*.p8
+play*.json
