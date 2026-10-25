@@ -5,7 +5,7 @@ description: "Adhaan: private, ad-free prayer times and Qibla direction."
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.14+17
+version: 1.1.0+18
 
 environment:
   sdk: ^3.13.0
@@ -29,6 +29,8 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.4
   flutter_lints: ^6.0.0
   flutter_test:
+    sdk: flutter
+  integration_test:
     sdk: flutter
 
 flutter_launcher_icons:
